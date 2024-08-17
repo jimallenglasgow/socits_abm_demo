@@ -292,66 +292,66 @@ def Socits_Model():
 
 #        file_name=Path(__file__).parent/"model_output_shiny.csv"
 
-        file_name="GitHub/socits_abm/model_output_shiny.csv"
+#        file_name="GitHub/socits_abm/model_output_shiny.csv"
 
-        no_values=len(model_output[:,0])
+ #       no_values=len(model_output[:,0])
 
-        with open(file_name, 'w', encoding='UTF8',newline='') as f:
+  #      with open(file_name, 'w', encoding='UTF8',newline='') as f:
 
-            writer = csv.writer(f)
+   #         writer = csv.writer(f)
             
-            for sol_value in np.arange(no_values): 
+    #        for sol_value in np.arange(no_values): 
 
-                writer.writerow(model_output[sol_value,:])
+     #           writer.writerow(model_output[sol_value,:])
 
-    if input.run_new()=="No":
+#    if input.run_new()=="No":
         
-        model_output_file=open('GitHub/socits_abm/model_output_shiny.csv' %locals())
-        model_output_tmp=csv.reader(model_output_file)
-        model_output=list(model_output_tmp)
-        model_output=np.array(model_output)
+ #       model_output_file=open('GitHub/socits_abm/model_output_shiny.csv' %locals())
+ #       model_output_tmp=csv.reader(model_output_file)
+  #      model_output=list(model_output_tmp)
+  #      model_output=np.array(model_output)
+#
+   #     model_output=model_output.astype(float)
 
-        model_output=model_output.astype(float)
+    #    print("Model output")
 
-        print("Model output")
-
-        print(model_output)
+     #   print(model_output)
         
-        age_category=np.zeros(no_agents)
+ #       age_category=np.zeros(no_agents)
     
-        if use_emp_networks==1:
+  #      if use_emp_networks==1:
         
-            no_in_each_age=[171, 205]
+   #         no_in_each_age=[171, 205]
             
-        else:
+    #    else:
             
-            no_in_each_age_tmp=int((no_agents-no_teachers)/2)
+      #      no_in_each_age_tmp=int((no_agents-no_teachers)/2)
+     #       
+       #     no_in_each_age=np.zeros(2).astype(int)
             
-            no_in_each_age=np.zeros(2).astype(int)
+        #    no_in_each_age[0]=int(no_in_each_age_tmp)
             
-            no_in_each_age[0]=int(no_in_each_age_tmp)
-            
-            no_in_each_age[1]=int(no_in_each_age_tmp)
+         #   no_in_each_age[1]=int(no_in_each_age_tmp)
         
-        age_category[no_teachers:(no_in_each_age[0]+no_teachers)]=1
+#        age_category[no_teachers:(no_in_each_age[0]+no_teachers)]=1
         
-        age_category[(no_in_each_age[0]+no_teachers+1):no_agents]=2
+ #       age_category[(no_in_each_age[0]+no_teachers+1):no_agents]=2
         
-        all_agents=[]
+ #       all_agents=[]
 
-        for sel_agent in np.arange(no_agents):
+  #      for sel_agent in np.arange(no_agents):
 
-            all_agents.append(Agent(sel_agent, no_time_steps, age_category))
+   #         all_agents.append(Agent(sel_agent, no_time_steps, age_category))
 
-        for sel_agent in np.arange(no_agents):
+    #    for sel_agent in np.arange(no_agents):
     
-            sel_agent_info_loc=np.where(model_output[:,0]==sel_agent)[0]
+     #       sel_agent_info_loc=np.where(model_output[:,0]==sel_agent)[0]
             
-            sel_agent_info_all_cols=model_output[sel_agent_info_loc,:]
+      #      sel_agent_info_all_cols=model_output[sel_agent_info_loc,:]
             
-            sel_agent_info=sel_agent_info_all_cols[:,[1,2,3,4,5,6]]
+       #     sel_agent_info=sel_agent_info_all_cols[:,[1,2,3,4,5,6]]
             
-            all_agents[sel_agent].agent_info=sel_agent_info
+        #    all_agents[sel_agent].agent_info=sel_agent_info
             
     
     
