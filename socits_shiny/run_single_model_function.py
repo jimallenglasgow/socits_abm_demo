@@ -111,11 +111,11 @@ def Run_The_Model_Once(all_calibrated_inputs, all_inputs_set_through_data, all_t
     
     ##load in the empirical networks
     
-    emp_networks=pd.read_csv("C:/Users/jma53d/OneDrive - University of Glasgow/WP3 - ABM/simulation/RQ_inputs.csv")
+#    emp_networks=pd.read_csv("C:/Users/jma53d/OneDrive - University of Glasgow/WP3 - ABM/simulation/RQ_inputs.csv")
 
-    print("emp_networks")
+#    print("emp_networks")
 
-    print(emp_networks)
+#    print(emp_networks)
     
     ##Part xxx: initialise the locations
 
@@ -291,7 +291,7 @@ def Run_The_Model_Once(all_calibrated_inputs, all_inputs_set_through_data, all_t
 
     for sel_agent in np.arange(no_agents):
 
-        all_agents[sel_agent].Initialise_RQ(all_agents, emp_networks, initial_agent_types, no_teachers, use_emp_networks) ##initialise the social network
+        all_agents[sel_agent].Initialise_RQ(all_agents, 0, initial_agent_types, no_teachers, use_emp_networks) ##initialise the social network
         
     S2_agent_ids=np.where(age_category==1)[0]
     
