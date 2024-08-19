@@ -1043,13 +1043,15 @@ def Socits_Model():
                     
                         assigned_loc=1
                         
+                    if is_toilet==1:
+                        
+                        assigned_loc=3
+                        
                     if is_canteen==1:
                         
                         assigned_loc=2
                         
-                    if is_toilet==1:
-                        
-                        assigned_loc=3
+                    
                 
 #                print("is_non_corridor = ",is_non_corridor)
                 
