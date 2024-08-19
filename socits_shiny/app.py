@@ -13,6 +13,8 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 
+import seaborn as sns
+
 import networkx as nx
 
 from functools import partial
@@ -47,7 +49,9 @@ with ui.sidebar():
     
 #    ui.input_slider("no_teachers", "No. teachers", 1, 50, 10)
     
-    ui.input_slider("stress_decay", "Stress decay", 0, 1, 0.1)
+    ui.input_radio_buttons("stress_decay_level", "Stress decay", choices=["0.15", "0.25"])
+    
+    ui.input_radio_buttons("prob_teacher_moving_level", "Prob. teacher moving", choices=["0.2", "0.8"])
     
     ui.input_checkbox("inc_science_perspective_input", "Include sci persp.", True)
     
@@ -61,11 +65,8 @@ with ui.sidebar():
     
     ui.input_radio_buttons("output_type", "Output", choices=["Stress", "Loneliness"])
     
-    ui.input_radio_buttons("plot_type", "Plot type", choices=["Heat", "Map", "Time"])
-    
-    ui.input_slider("sel_time_step", "Selected time step", 1, 100, 50)
-    
-    ui.input_radio_buttons("run_new", "Run new simulation", choices=["Yes", "No"])
+    ui.input_radio_buttons("plot_type", "Plot type", choices=["Map", "SOCITS square", "Heat", "Time"])
+
     
 @render.plot(alt="A histogram")
 
@@ -116,9 +117,19 @@ def Socits_Model():
 
     ##parameters common to all perspectives
 
-    stress_decay=input.stress_decay() ##how quickly stress decays
+    stress_decay_level=input.stress_decay_level()
 
-    prob_teacher_moving=1 ##the probability of a teacher moving around the school
+    stress_decay=0.25 ##how quickly stress decays
+
+    if stress_decay_level=="0.15":
+
+        stress_decay=0.15 ##how quickly stress decays
+
+    prob_teacher_moving=0.2 ##the probability of a teacher moving around the school
+    
+    if input.prob_teacher_moving_level()=="0.8":
+
+        prob_teacher_moving=0.8
     
     move_with_friends=1 ##should individuals try to move with friends?  1==Yes, 0==No
 
@@ -252,41 +263,39 @@ def Socits_Model():
 
     ##the following line calls the function "Run_The_Model_Once" in the file "run_single_model_function.py" to run the model, and returns all of the agents information in each time step
         
-    if input.run_new()=="Yes":
-
-        plot_type="0"
-        
-        all_technical_inputs=[plot_type, map_type, floor_width, floor_length, stair_case_width, corridor_width, no_time_steps, no_students, no_teachers, no_bullies,inc_science_perspective, inc_walking_perspective, inc_yais_perspective, inc_teacher_perspective, no_classes, moving_times, move_with_friends, lunch_times, no_groups, class_prob_dist, use_emp_networks]
-
-        all_inputs_set_through_data=[toilet_prob, canteen_prob]
-
-        all_calibrated_inputs=[stress_decay, status_threshold, increase_in_stress_due_to_neg_int, decrease_in_stress_due_to_pos_int, rq_decrease_through_bullying,rq_increase_through_support, crowded_threshold, crowded_stress, journey_stress, stress_bully_scale, stress_through_class_interaction, prob_teacher_moving, status_increase, status_decrease, mean_time_stress, mean_room_stress, prob_follow_group]
-
-        all_outputs=Run_The_Model_Once(all_calibrated_inputs, all_inputs_set_through_data, all_technical_inputs)
-
-        all_agents=all_outputs[0]
+    plot_type="0"
     
-        all_locations=all_outputs[1]
+    all_technical_inputs=[plot_type, map_type, floor_width, floor_length, stair_case_width, corridor_width, no_time_steps, no_students, no_teachers, no_bullies,inc_science_perspective, inc_walking_perspective, inc_yais_perspective, inc_teacher_perspective, no_classes, moving_times, move_with_friends, lunch_times, no_groups, class_prob_dist, use_emp_networks]
 
-        ###########
+    all_inputs_set_through_data=[toilet_prob, canteen_prob]
 
-        ##save the model output
+    all_calibrated_inputs=[stress_decay, status_threshold, increase_in_stress_due_to_neg_int, decrease_in_stress_due_to_pos_int, rq_decrease_through_bullying,rq_increase_through_support, crowded_threshold, crowded_stress, journey_stress, stress_bully_scale, stress_through_class_interaction, prob_teacher_moving, status_increase, status_decrease, mean_time_stress, mean_room_stress, prob_follow_group]
 
-        ##first generate an array which contains each agent's info at each timestep
+    all_outputs=Run_The_Model_Once(all_calibrated_inputs, all_inputs_set_through_data, all_technical_inputs)
 
-        sel_agent=0
+    all_agents=all_outputs[0]
 
-        model_output=np.hstack([np.zeros([no_time_steps,1]),all_agents[sel_agent].agent_info])
+    all_locations=all_outputs[1]
 
-        for sel_agent in np.arange(1,no_agents):
+    ###########
 
-            sel_agent_model_output=np.hstack([np.ones([no_time_steps,1])*sel_agent,all_agents[sel_agent].agent_info])
+    ##save the model output
 
-            model_output=np.vstack([model_output,sel_agent_model_output])
+    ##first generate an array which contains each agent's info at each timestep
 
-        print("Model output")
+    sel_agent=0
 
-        print(model_output)
+    model_output=np.hstack([np.zeros([no_time_steps,1]),all_agents[sel_agent].agent_info])
+
+    for sel_agent in np.arange(1,no_agents):
+
+        sel_agent_model_output=np.hstack([np.ones([no_time_steps,1])*sel_agent,all_agents[sel_agent].agent_info])
+
+        model_output=np.vstack([model_output,sel_agent_model_output])
+
+#    print("Model output")
+
+#    print(model_output)
 
         ##and write them to a file
 
@@ -367,7 +376,7 @@ def Socits_Model():
 
     plot_type="3"
 
-    sel_time_step=input.sel_time_step()
+    sel_time_step=30#input.sel_time_step()
 
     ##selected output.....
 
@@ -973,3 +982,113 @@ def Socits_Model():
 
         plt.xticks([])
         plt.yticks([])
+
+    if plot_type=="SOCITS square": ##plot the SOCITS squares from the model
+        
+        no_agents=len(all_agents) ##find the number of agents
+        
+        no_locations=len(all_locations)
+
+        no_time_steps=len(all_agents[0].agent_info[:,0]) ##and the number of time steps
+
+        all_SAM2_output=np.zeros([no_agents, 4]) ##initialise agent output for all agents
+        
+        all_SAM2_count=np.ones([no_agents, 4]) ##initialise how many time steps this data is for
+        
+        poss_classrooms=all_agents[0].all_classrooms
+        
+        poss_toilets=all_agents[0].all_toilets
+        
+        poss_canteen=all_agents[0].all_canteens
+        
+        print("poss_classrooms")
+        
+        print(poss_classrooms)
+        
+        print("poss_toilets")
+        
+        print(poss_toilets)
+        
+        print("poss_canteen")
+        
+        print(poss_canteen)
+        
+        all_non_corridors=np.hstack([poss_classrooms, poss_toilets, poss_canteen])
+        
+        print("all_non_corridors")
+        
+        print(all_non_corridors)
+
+        for sel_agent in np.arange(no_agents): ##for each agent, assign the specific output to the output array
+
+            sel_agent_info=all_agents[sel_agent].agent_info
+            
+            for time_step in np.arange(no_time_steps):
+                
+                agent_loc=int(sel_agent_info[time_step, 8])-1
+                
+                assigned_loc=0
+                
+                is_non_corridor=np.isin(agent_loc, all_non_corridors)
+                
+                if is_non_corridor==1:
+                    
+                    is_class=np.isin(agent_loc, poss_classrooms)
+                    
+                    is_canteen=np.isin(agent_loc, poss_canteen)
+                    
+                    is_toilet=np.isin(agent_loc, poss_toilets)
+                    
+                    if is_class==1:
+                    
+                        assigned_loc=1
+                        
+                    if is_canteen==1:
+                        
+                        assigned_loc=2
+                        
+                    if is_toilet==1:
+                        
+                        assigned_loc=3
+                
+#                print("is_non_corridor = ",is_non_corridor)
+                
+                #print("agent_loc = ",agent_loc)
+                
+                agent_output=sel_agent_info[time_step, selected_output]
+                
+                all_SAM2_output[sel_agent, assigned_loc]=all_SAM2_output[sel_agent, assigned_loc]+agent_output
+                
+                all_SAM2_count[sel_agent, assigned_loc]=all_SAM2_output[sel_agent, assigned_loc]+1
+            
+        print("All agent output SAM2")
+        
+        print(all_SAM2_output)
+        
+#        print("All agent output count")
+        
+ #       print(all_SAM2_count)
+        
+        all_scaled_SAM2_output=all_SAM2_output/all_SAM2_count
+        
+        ##now we want to eliminate all locations where nothing ever happens
+        
+        total_situation_count=np.sum(all_SAM2_count,axis=1)
+                
+        fig, ax = plt.subplots()
+
+        ax = sns.heatmap(all_scaled_SAM2_output, linewidth=0.5)
+
+        ax.set_xlabel("Location ID")
+
+        ax.set_ylabel("Agent")
+        
+        ##display it and save it
+        
+        plt.xticks([0.5, 1.5, 2.5, 3.5], ['Corridor', 'Class', 'Canteen', 'Toilet'], rotation=20)  # Set text labels and properties.
+
+        plt.yticks([])
+
+#        plt.show()
+        
+ #       plt.close()
