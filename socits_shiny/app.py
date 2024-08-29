@@ -478,7 +478,7 @@ def Socits_Model():
 
         ax.set_ylabel(selected_output_name)
         
-        plt.title("Change over time for four students at 100 time points in the school day", fontsize=20)
+        plt.title(f"Change over time for four students at {no_time_steps} time points in the school day", fontsize=20)
     
     ##display it and save it
     
