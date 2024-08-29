@@ -49,13 +49,13 @@ with ui.sidebar():
     
 #    ui.input_slider("no_teachers", "No. teachers", 1, 50, 10)
     
-    ui.input_radio_buttons("stress_decay_level", "Stress decay", choices=["0.15", "0.25"])
+    ui.input_radio_buttons("stress_decay_level", "Deep breath effect", choices=["Low", "High"])
     
-    ui.input_radio_buttons("prob_teacher_moving_level", "Prob. teacher moving", choices=["0.2", "0.8"])
+    ui.input_radio_buttons("prob_teacher_moving_level", "Staff in corridors", choices=["Hardly ever", "Almost always"])
     
-    ui.input_checkbox("inc_science_perspective_input", "Include sci persp.", True)
+    ui.input_checkbox("inc_science_perspective_input", "What scientists think", True)
     
-    ui.input_checkbox("inc_youth_perspective_input", "Include youth persp.", True)
+    ui.input_checkbox("inc_youth_perspective_input", "What young people think", True)
     
 #    ui.input_checkbox("inc_walking_perspective_input", "Include walk persp.", False)
     
@@ -65,7 +65,7 @@ with ui.sidebar():
     
     ui.input_radio_buttons("output_type", "Output", choices=["Stress", "Loneliness"])
     
-    ui.input_radio_buttons("plot_type", "Plot type", choices=["Map", "SOCITS square", "Heat", "Time"])
+    ui.input_radio_buttons("plot_type", "Plot type", choices=["Time", "Map", "Situation map"])
 
     
 @render.plot(alt="A histogram")
@@ -101,7 +101,7 @@ def Socits_Model():
 
     ##time steps
 
-    no_time_steps=100
+    no_time_steps=120
 
     ##no. of different agent types
 
@@ -121,29 +121,29 @@ def Socits_Model():
 
     stress_decay=0.25 ##how quickly stress decays
 
-    if stress_decay_level=="0.15":
+    if stress_decay_level=="Low":
 
         stress_decay=0.15 ##how quickly stress decays
 
     prob_teacher_moving=0.2 ##the probability of a teacher moving around the school
     
-    if input.prob_teacher_moving_level()=="0.8":
+    if input.prob_teacher_moving_level()=="Almost always":
 
         prob_teacher_moving=0.8
     
-    move_with_friends=1 ##should individuals try to move with friends?  1==Yes, 0==No
+    move_with_friends=0.1 ##should individuals try to move with friends?  1==Yes, 0==No
 
-    moving_times=[25, 50, 75]
+    moving_times=[10, 40, 60, 80, 110]
 
-    lunch_times=[0, 1, 0]
+    lunch_times=[0, 1, 0, 1, 0]
 
     mean_time_stress=1 ##the mean of the normal distribution for the time stress
 
     mean_room_stress=1
     
-    toilet_prob=0.01 ##probability of any student going to the toilet at any one time
+    toilet_prob=0.4 ##probability of any student going to the toilet at any one time
 
-    canteen_prob=0.4 ##probability of any student eating lunch in the canteen
+    canteen_prob=0.8 ##probability of any student eating lunch in the canteen
 
     prob_follow_group=0.5
 
@@ -376,7 +376,7 @@ def Socits_Model():
 
     plot_type="3"
 
-    sel_time_step=30#input.sel_time_step()
+    sel_time_step=83#input.sel_time_step()
 
     ##selected output.....
 
@@ -477,6 +477,8 @@ def Socits_Model():
         ax.set_xlabel("Time")
 
         ax.set_ylabel(selected_output_name)
+        
+        plt.title("Change over time for four students at 100 time points in the school day", fontsize=20)
     
     ##display it and save it
     
@@ -726,6 +728,8 @@ def Socits_Model():
             ax.set(xlim=[-0.5, floor_width*2+stair_case_width-0.5], ylim=[-0.5, floor_length-0.5])
         
         ##and animate the output
+        
+        plt.title(f"Map of the school at time point {sel_time_step}", fontsize=20)
 
         plt.xticks([])
         plt.yticks([])
@@ -983,7 +987,7 @@ def Socits_Model():
         plt.xticks([])
         plt.yticks([])
 
-    if plot_type=="SOCITS square": ##plot the SOCITS squares from the model
+    if plot_type=="Situation map": ##plot the SOCITS squares from the model
         
         no_agents=len(all_agents) ##find the number of agents
         
@@ -1062,7 +1066,8 @@ def Socits_Model():
                 all_SAM2_output[sel_agent, assigned_loc]=all_SAM2_output[sel_agent, assigned_loc]+agent_output
                 
                 all_SAM2_count[sel_agent, assigned_loc]=all_SAM2_output[sel_agent, assigned_loc]+1
-            
+        
+        
         print("All agent output SAM2")
         
         print(all_SAM2_output)
@@ -1073,23 +1078,47 @@ def Socits_Model():
         
         all_scaled_SAM2_output=all_SAM2_output/all_SAM2_count
         
+        max_measure=np.max(all_scaled_SAM2_output)
+        
+        min_measure=np.min(all_scaled_SAM2_output[np.nonzero(all_scaled_SAM2_output)])
+        
+        print("min_measure = ",min_measure)
+        
+        for sel_agent in np.arange(no_agents):
+            
+            for sel_loc in np.arange(4):
+                
+                all_scaled_SAM2_output_tmp=all_scaled_SAM2_output[sel_agent, sel_loc]
+                
+                if all_scaled_SAM2_output_tmp==0:
+                    
+                    all_scaled_SAM2_output[sel_agent, sel_loc]=min_measure+(max_measure-min_measure)/2
+                    
+                    
+
+        all_scaled_SAM2_output=np.transpose(all_scaled_SAM2_output)
+        
         ##now we want to eliminate all locations where nothing ever happens
         
         total_situation_count=np.sum(all_SAM2_count,axis=1)
                 
         fig, ax = plt.subplots()
 
-        ax = sns.heatmap(all_scaled_SAM2_output, linewidth=0.5)
+        ax = sns.heatmap(all_scaled_SAM2_output, linewidth=0.5, cmap="coolwarm")
+        
+        sns.color_palette("coolwarm", as_cmap=True)
 
-        ax.set_xlabel("Location ID")
+        ax.set_ylabel("Location ID")
 
-        ax.set_ylabel("Agent")
+        ax.set_xlabel("Agent")
+        
+        plt.title("Measure in each situation", fontsize=20)
         
         ##display it and save it
         
-        plt.xticks([0.5, 1.5, 2.5, 3.5], ['Corridor', 'Class', 'Canteen', 'Toilet'], rotation=20)  # Set text labels and properties.
+        plt.yticks([0.5, 1.5, 2.5, 3.5], ['Corridor', 'Class', 'Canteen', 'Toilet'], rotation=20)  # Set text labels and properties.
 
-        plt.yticks([])
+        plt.xticks([])
 
 #        plt.show()
         

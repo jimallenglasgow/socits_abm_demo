@@ -109,11 +109,11 @@ class Location():
     
         ##select a canteen
         
-        selected_canteen=np.array(non_classrooms[2]).astype(int)
+        selected_canteen=np.array(non_classrooms[2].astype(int))
             
-  #      print("selected_canteen")
+        print("selected_canteen")
         
-   #     print(selected_canteen)
+        print(selected_canteen)
             
         ##select a staff-room
         
@@ -141,18 +141,18 @@ class Location():
                    
                     self.is_toilet=1
                     
-            loc_tmp==selected_canteen
+            loc_tmp=selected_canteen
                
             if location_id==loc_tmp:
                
                 self.is_canteen=1
-                    
-            loc_tmp==selected_staffroom
+                
+            loc_tmp=selected_staffroom
                
             if location_id==loc_tmp:
                
                 self.is_staff_room=1
-                   
+                       
             
             
             
