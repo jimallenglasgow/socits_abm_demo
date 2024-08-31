@@ -111,12 +111,14 @@ def Run_The_Model_Once(all_calibrated_inputs, all_inputs_set_through_data, all_t
     
     ##load in the empirical networks
     
-    emp_networks=pd.read_csv("C:/Users/jma53d/OneDrive - University of Glasgow/WP3 - ABM/simulation/RQ_inputs.csv")
+#    emp_networks=pd.read_csv("C:/Users/jma53d/OneDrive - University of Glasgow/WP3 - ABM/simulation/RQ_inputs.csv")
 
-    print("emp_networks")
+ #   print("emp_networks")
 
-    print(emp_networks)
-    
+  #  print(emp_networks)
+   
+    emp_networks=0
+   
     ##Part xxx: initialise the locations
 
     grid_size=0
