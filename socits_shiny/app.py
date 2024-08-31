@@ -53,9 +53,11 @@ with ui.sidebar():
     
     ui.input_radio_buttons("prob_teacher_moving_level", "Staff in corridors", choices=["Hardly ever", "Almost always"])
     
-    ui.input_checkbox("inc_science_perspective_input", "What scientists think", True)
+    ui.input_checkbox("inc_science_perspective_input", "What scientists think", False)
     
-    ui.input_checkbox("inc_youth_perspective_input", "What young people think", True)
+    ui.input_checkbox("inc_youth_perspective_input", "What young people think", False)
+    
+    ui.input_checkbox("inc_walking_input", "Walking interviews", True)
     
 #    ui.input_checkbox("inc_walking_perspective_input", "Include walk persp.", False)
     
@@ -119,7 +121,7 @@ def Socits_Model():
 
     stress_decay_level=input.stress_decay_level()
 
-    stress_decay=0.25 ##how quickly stress decays
+    stress_decay=0.3 ##how quickly stress decays
 
     if stress_decay_level=="Low":
 
@@ -131,13 +133,13 @@ def Socits_Model():
 
         prob_teacher_moving=0.8
     
-    move_with_friends=0.1 ##should individuals try to move with friends?  1==Yes, 0==No
+    move_with_friends=0.5 ##should individuals try to move with friends?  1==Yes, 0==No
 
     moving_times=[10, 40, 60, 80, 110]
 
     lunch_times=[0, 1, 0, 1, 0]
 
-    mean_time_stress=1 ##the mean of the normal distribution for the time stress
+    mean_time_stress=-10 ##the mean of the normal distribution for the time stress
 
     mean_room_stress=1
     
@@ -145,7 +147,7 @@ def Socits_Model():
 
     canteen_prob=0.8 ##probability of any student eating lunch in the canteen
 
-    prob_follow_group=0.5
+    prob_follow_group=0.9
 
     ##parameters to include certain perspective (1=include)
 
@@ -180,6 +182,18 @@ def Socits_Model():
         inc_yais_perspective=0
         
         inc_teacher_perspective=0
+        
+    if input.inc_walking_input()==1:
+
+        inc_walking_perspective=1
+        
+    else:
+    
+        inc_walking_perspective=0
+        
+        
+        
+        
 
 
 #    if input.inc_walking_perspective_input()==1:
@@ -217,7 +231,7 @@ def Socits_Model():
 
     ##consequences
 
-    increase_in_stress_due_to_neg_int=1 ##change in stress due to a negative interaction
+    increase_in_stress_due_to_neg_int=1.2 ##change in stress due to a negative interaction
 
     decrease_in_stress_due_to_pos_int=0.2 ##change in stress due to a positive interaction
 
@@ -233,11 +247,11 @@ def Socits_Model():
 
     ##triggers
 
-    crowded_threshold=3 ##number of others in a location before stress increases
+    crowded_threshold=2 ##number of others in a location before stress increases
 
     ##consequences
 
-    crowded_stress=2 ##the amount by which stress increases due to crowdedness
+    crowded_stress=1 ##the amount by which stress increases due to crowdedness
 
     journey_stress=1 ##stress increase if a journey is disrupted
 
@@ -255,7 +269,7 @@ def Socits_Model():
 
     ##consequences
 
-    stress_through_class_interaction=0.4 ##stress increase due to negative interaction between students and teachers
+    stress_through_class_interaction=1 ##stress increase due to negative interaction between students and teachers
 
     ########################################################
 
@@ -1005,23 +1019,23 @@ def Socits_Model():
         
         poss_canteen=all_agents[0].all_canteens
         
-        print("poss_classrooms")
+#        print("poss_classrooms")
         
-        print(poss_classrooms)
+ #       print(poss_classrooms)
         
-        print("poss_toilets")
+  #      print("poss_toilets")
         
-        print(poss_toilets)
+   #     print(poss_toilets)
         
-        print("poss_canteen")
+    #    print("poss_canteen")
         
-        print(poss_canteen)
+     #   print(poss_canteen)
         
         all_non_corridors=np.hstack([poss_classrooms, poss_toilets, poss_canteen])
         
-        print("all_non_corridors")
+      #  print("all_non_corridors")
         
-        print(all_non_corridors)
+       # print(all_non_corridors)
 
         for sel_agent in np.arange(no_agents): ##for each agent, assign the specific output to the output array
 
@@ -1030,6 +1044,8 @@ def Socits_Model():
             for time_step in np.arange(no_time_steps):
                 
                 agent_loc=int(sel_agent_info[time_step, 8])-1
+                
+        #        print("agent_loc = ",agent_loc)
                 
                 assigned_loc=0
                 
@@ -1061,28 +1077,32 @@ def Socits_Model():
                 
                 #print("agent_loc = ",agent_loc)
                 
+         #       print("assigned_loc = ",assigned_loc)
+                
                 agent_output=sel_agent_info[time_step, selected_output]
                 
                 all_SAM2_output[sel_agent, assigned_loc]=all_SAM2_output[sel_agent, assigned_loc]+agent_output
                 
-                all_SAM2_count[sel_agent, assigned_loc]=all_SAM2_output[sel_agent, assigned_loc]+1
+                all_SAM2_count[sel_agent, assigned_loc]=all_SAM2_count[sel_agent, assigned_loc]+1
         
         
-        print("All agent output SAM2")
+#        print("All agent output SAM2")
         
-        print(all_SAM2_output)
-        
-#        print("All agent output count")
-        
- #       print(all_SAM2_count)
+ #       print(all_SAM2_output)
         
         all_scaled_SAM2_output=all_SAM2_output/all_SAM2_count
         
         max_measure=np.max(all_scaled_SAM2_output)
         
-        min_measure=np.min(all_scaled_SAM2_output[np.nonzero(all_scaled_SAM2_output)])
+        min_measure=0
         
-        print("min_measure = ",min_measure)
+        nonzeros=np.nonzero(all_scaled_SAM2_output)
+        
+        if nonzeros[0].size!=0:
+        
+            min_measure=np.min(all_scaled_SAM2_output[np.nonzero(all_scaled_SAM2_output)])
+        
+  #      print("min_measure = ",min_measure)
         
         for sel_agent in np.arange(no_agents):
             
@@ -1095,6 +1115,10 @@ def Socits_Model():
                     all_scaled_SAM2_output[sel_agent, sel_loc]=min_measure+(max_measure-min_measure)/2
                     
                     
+
+#        print("All agent output output")
+        
+ #       print(all_scaled_SAM2_output)
 
         all_scaled_SAM2_output=np.transpose(all_scaled_SAM2_output)
         

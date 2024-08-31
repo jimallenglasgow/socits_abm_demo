@@ -352,7 +352,7 @@ class Agent():
     
     ##This assigns a random stress to each classroom for the agent, to match the fact that some classrooms are more or less nice.  The function also does the same for specified time steps, in particular those in the middle 10% and the last 20% of the day.
     
-    def Initialise_Agent_Location_Time_Stress(self,all_locations,no_time_steps, mean_time_stress, mean_room_stress):
+    def Initialise_Agent_Location_Time_Stress(self,all_locations,no_time_steps, mean_time_stress, mean_room_stress, inc_walking_perspective):
 
         if self.agent_type!=2: ##if the agent is a student
 
@@ -367,30 +367,31 @@ class Agent():
             if ind_time_stress<0:
             
                 ind_time_stress=0
+                
+            if inc_walking_perspective==1:
 
-            for time in np.arange(no_time_steps): ##assign the correct stress for each time step
+                for time in np.arange(no_time_steps): ##assign the correct stress for each time step
 
-#                if time/no_time_steps>0.8: ##if the time is above 80% of the time, individuals find it stressful
+    #                if time/no_time_steps>0.8: ##if the time is above 80% of the time, individuals find it stressful
 
-                    self.time_stress[time]=ind_time_stress
+                        self.time_stress[time]=ind_time_stress
+                        
+     #               if time/no_time_steps>0.45 and time/no_time_steps<0.55: ##and if it's between 45% and 55%
+
+      #                  self.time_stress[time]=ind_time_stress
+                        
+                poss_classrooms=self.all_classrooms
+                
+                for sel_location in poss_classrooms: ##for each classroom, randomly assign a stress
                     
- #               if time/no_time_steps>0.45 and time/no_time_steps<0.55: ##and if it's between 45% and 55%
-
-  #                  self.time_stress[time]=ind_time_stress
+                    sel_room_stress=np.random.normal(loc=mean_room_stress, scale=0.1)
                     
-            poss_classrooms=self.all_classrooms
-
-            for sel_location in poss_classrooms: ##for each classroom, randomly assign a stress
-                
-                sel_room_stress=np.random.normal(loc=mean_room_stress)
-                
-                if sel_room_stress<0:
-                
-                    sel_room_stress=0
-                
-                self.location_stress[int(sel_location)]=sel_room_stress
+                    if sel_room_stress<0:
                     
-
+                        sel_room_stress=0
+                    
+                    self.location_stress[int(sel_location)]=sel_room_stress
+                
 
     ##################################
     

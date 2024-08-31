@@ -111,11 +111,11 @@ def Run_The_Model_Once(all_calibrated_inputs, all_inputs_set_through_data, all_t
     
     ##load in the empirical networks
     
-#    emp_networks=pd.read_csv("C:/Users/jma53d/OneDrive - University of Glasgow/WP3 - ABM/simulation/RQ_inputs.csv")
+    emp_networks=pd.read_csv("C:/Users/jma53d/OneDrive - University of Glasgow/WP3 - ABM/simulation/RQ_inputs.csv")
 
-#    print("emp_networks")
+    print("emp_networks")
 
-#    print(emp_networks)
+    print(emp_networks)
     
     ##Part xxx: initialise the locations
 
@@ -291,7 +291,7 @@ def Run_The_Model_Once(all_calibrated_inputs, all_inputs_set_through_data, all_t
 
     for sel_agent in np.arange(no_agents):
 
-        all_agents[sel_agent].Initialise_RQ(all_agents, 0, initial_agent_types, no_teachers, use_emp_networks) ##initialise the social network
+        all_agents[sel_agent].Initialise_RQ(all_agents, emp_networks, initial_agent_types, no_teachers, use_emp_networks) ##initialise the social network
         
     S2_agent_ids=np.where(age_category==1)[0]
     
@@ -337,7 +337,7 @@ def Run_The_Model_Once(all_calibrated_inputs, all_inputs_set_through_data, all_t
 
         all_agents[sel_agent].Initialise_Location(all_locations,assigned_teacher_classrooms, prob_follow_group) ##where do they start?
 
-        all_agents[sel_agent].Initialise_Agent_Location_Time_Stress(all_locations,no_time_steps, mean_time_stress, mean_room_stress) ##how stressed are they in their initial location
+        all_agents[sel_agent].Initialise_Agent_Location_Time_Stress(all_locations,no_time_steps, mean_time_stress, mean_room_stress, inc_walking_perspective) ##how stressed are they in their initial location
 
         all_agents[sel_agent].Record_Agent_Info(0) ##save this initial information
 
@@ -516,9 +516,9 @@ def Run_The_Model_Once(all_calibrated_inputs, all_inputs_set_through_data, all_t
 
             for sel_agent in np.arange(no_agents):
                 
-#                all_agents[sel_agent].Decide_If_Stressed_Due_To_Time(all_locations,status_threshold,time)
+                all_agents[sel_agent].Decide_If_Stressed_Due_To_Time(all_locations,status_threshold,time)
 
- #               all_agents[sel_agent].Decide_If_Stressed_Due_To_Location(all_locations,status_threshold,time)
+                all_agents[sel_agent].Decide_If_Stressed_Due_To_Location(all_locations,status_threshold,time)
 
                 all_agents[sel_agent].Decide_If_Stressed_Due_To_Crowdedness(all_locations,crowded_threshold,crowded_stress)
                 
