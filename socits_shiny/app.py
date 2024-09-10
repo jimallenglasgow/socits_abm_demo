@@ -53,11 +53,11 @@ with ui.sidebar():
     
     ui.input_radio_buttons("prob_teacher_moving_level", "Staff in corridors", choices=["Hardly ever", "Almost always"])
     
-    ui.input_checkbox("inc_science_perspective_input", "What scientists think", False)
+    ui.input_checkbox("inc_science_perspective_input", "Other people's behaviour is important", False)
     
-    ui.input_checkbox("inc_youth_perspective_input", "What young people think", False)
+    ui.input_checkbox("inc_youth_perspective_input", "Crowdedness is important", False)
     
-    ui.input_checkbox("inc_walking_input", "Walking interviews", True)
+    ui.input_checkbox("inc_walking_input", "Which room is important", False)
     
 #    ui.input_checkbox("inc_walking_perspective_input", "Include walk persp.", False)
     
@@ -67,7 +67,7 @@ with ui.sidebar():
     
     ui.input_radio_buttons("output_type", "Output", choices=["Stress", "Loneliness"])
     
-    ui.input_radio_buttons("plot_type", "Plot type", choices=["Time", "Map", "Situation map"])
+    ui.input_radio_buttons("plot_type", "Plot type", choices=["Map", "Time", "Situation map"])
 
     
 @render.plot(alt="A histogram")
