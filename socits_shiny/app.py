@@ -42,12 +42,14 @@ from run_single_model_function import Run_The_Model_Once
 from shiny.express import ui, input, render
 from shiny import reactive
 
+from pathlib import Path
+
 
 with ui.sidebar():
 
 #    ui.input_slider("no_students", "No. students", 1, 200, 100)
     
-#    ui.input_slider("no_teachers", "No. teachers", 1, 50, 10)
+    ui.input_slider("sel_time_step", "Time passed", 1, 120, 3)
     
     ui.input_radio_buttons("stress_decay_level", "Deep breath effect", choices=["Low", "High"])
     
@@ -55,7 +57,7 @@ with ui.sidebar():
     
     ui.input_checkbox("inc_science_perspective_input", "Other people's behaviour is important", False)
     
-    ui.input_checkbox("inc_youth_perspective_input", "Crowdedness is important", False)
+#    ui.input_checkbox("inc_youth_perspective_input", "Crowdedness is important", False)
     
     ui.input_checkbox("inc_walking_input", "Which room is important", False)
     
@@ -65,7 +67,7 @@ with ui.sidebar():
     
   #  ui.input_checkbox("inc_teacher_perspective_input", "Include teacher persp.", False)
     
-    ui.input_radio_buttons("output_type", "Output", choices=["Stress", "Loneliness"])
+#    ui.input_radio_buttons("output_type", "Output", choices=["Stress", "Loneliness"])
     
     ui.input_radio_buttons("plot_type", "Plot type", choices=["Map", "Time", "Situation map"])
 
@@ -121,11 +123,11 @@ def Socits_Model():
 
     stress_decay_level=input.stress_decay_level()
 
-    stress_decay=0.3 ##how quickly stress decays
+    stress_decay=0.4 ##how quickly stress decays
 
     if stress_decay_level=="Low":
 
-        stress_decay=0.15 ##how quickly stress decays
+        stress_decay=0.1 ##how quickly stress decays
 
     prob_teacher_moving=0.2 ##the probability of a teacher moving around the school
     
@@ -167,7 +169,7 @@ def Socits_Model():
     
         inc_science_perspective=0
 
-    if input.inc_youth_perspective_input()==1:
+    if input.inc_walking_input()==1:
 
         inc_walking_perspective=1
         
@@ -183,13 +185,13 @@ def Socits_Model():
         
         inc_teacher_perspective=0
         
-    if input.inc_walking_input()==1:
+#    if input.inc_walking_input()==1:
 
-        inc_walking_perspective=1
+ #       inc_walking_perspective=1
         
-    else:
+  #  else:
     
-        inc_walking_perspective=0
+   #     inc_walking_perspective=0
         
         
         
@@ -279,104 +281,108 @@ def Socits_Model():
         
     plot_type="0"
     
-    all_technical_inputs=[plot_type, map_type, floor_width, floor_length, stair_case_width, corridor_width, no_time_steps, no_students, no_teachers, no_bullies,inc_science_perspective, inc_walking_perspective, inc_yais_perspective, inc_teacher_perspective, no_classes, moving_times, move_with_friends, lunch_times, no_groups, class_prob_dist, use_emp_networks]
-
-    all_inputs_set_through_data=[toilet_prob, canteen_prob]
-
-    all_calibrated_inputs=[stress_decay, status_threshold, increase_in_stress_due_to_neg_int, decrease_in_stress_due_to_pos_int, rq_decrease_through_bullying,rq_increase_through_support, crowded_threshold, crowded_stress, journey_stress, stress_bully_scale, stress_through_class_interaction, prob_teacher_moving, status_increase, status_decrease, mean_time_stress, mean_room_stress, prob_follow_group]
-
-    all_outputs=Run_The_Model_Once(all_calibrated_inputs, all_inputs_set_through_data, all_technical_inputs)
-
-    all_agents=all_outputs[0]
-
-    all_locations=all_outputs[1]
-
-    ###########
-
-    ##save the model output
-
-    ##first generate an array which contains each agent's info at each timestep
-
-    sel_agent=0
-
-    model_output=np.hstack([np.zeros([no_time_steps,1]),all_agents[sel_agent].agent_info])
-
-    for sel_agent in np.arange(1,no_agents):
-
-        sel_agent_model_output=np.hstack([np.ones([no_time_steps,1])*sel_agent,all_agents[sel_agent].agent_info])
-
-        model_output=np.vstack([model_output,sel_agent_model_output])
-
-#    print("Model output")
-
-#    print(model_output)
-
-        ##and write them to a file
-
-#        file_name=Path(__file__).parent/"model_output_shiny.csv"
-
-#        file_name="GitHub/socits_abm/model_output_shiny.csv"
-
- #       no_values=len(model_output[:,0])
-
-  #      with open(file_name, 'w', encoding='UTF8',newline='') as f:
-
-   #         writer = csv.writer(f)
-            
-    #        for sol_value in np.arange(no_values): 
-
-     #           writer.writerow(model_output[sol_value,:])
-
-#    if input.run_new()=="No":
-        
- #       model_output_file=open('GitHub/socits_abm/model_output_shiny.csv' %locals())
- #       model_output_tmp=csv.reader(model_output_file)
-  #      model_output=list(model_output_tmp)
-  #      model_output=np.array(model_output)
-#
-   #     model_output=model_output.astype(float)
-
-    #    print("Model output")
-
-     #   print(model_output)
-        
- #       age_category=np.zeros(no_agents)
+    file_name=f"input_files/model_output_sci_perspective_{int(inc_science_perspective)}_yai_perspective_{int(inc_walking_perspective)}_stress_decay_0_{int(stress_decay*100)}_prob_teacher_moving_0_{int(prob_teacher_moving*100)}.csv"
     
-  #      if use_emp_networks==1:
-        
-   #         no_in_each_age=[171, 205]
-            
-    #    else:
-            
-      #      no_in_each_age_tmp=int((no_agents-no_teachers)/2)
-     #       
-       #     no_in_each_age=np.zeros(2).astype(int)
-            
-        #    no_in_each_age[0]=int(no_in_each_age_tmp)
-            
-         #   no_in_each_age[1]=int(no_in_each_age_tmp)
-        
-#        age_category[no_teachers:(no_in_each_age[0]+no_teachers)]=1
-        
- #       age_category[(no_in_each_age[0]+no_teachers+1):no_agents]=2
-        
- #       all_agents=[]
-
-  #      for sel_agent in np.arange(no_agents):
-
-   #         all_agents.append(Agent(sel_agent, no_time_steps, age_category))
-
-    #    for sel_agent in np.arange(no_agents):
+    infile = Path(__file__).parent / file_name
     
-     #       sel_agent_info_loc=np.where(model_output[:,0]==sel_agent)[0]
-            
-      #      sel_agent_info_all_cols=model_output[sel_agent_info_loc,:]
-            
-       #     sel_agent_info=sel_agent_info_all_cols[:,[1,2,3,4,5,6]]
-            
-        #    all_agents[sel_agent].agent_info=sel_agent_info
-            
+    model_output_file=open(infile)
+    model_output_tmp=csv.reader(model_output_file)
+    model_output=list(model_output_tmp)
+    model_output=np.array(model_output)
+
+    model_output=model_output.astype(float)
+
+    print("Model output")
+
+    print(model_output)
     
+    ########
+    
+    age_category=np.zeros(no_agents)
+    
+    if use_emp_networks==1:
+    
+        no_in_each_age=[171, 205]
+        
+    else:
+        
+        no_in_each_age_tmp=int((no_agents-no_teachers)/2)
+        
+        no_in_each_age=np.zeros(2).astype(int)
+        
+        no_in_each_age[0]=int(no_in_each_age_tmp)
+        
+        no_in_each_age[1]=int(no_in_each_age_tmp)
+    
+    age_category[no_teachers:(no_in_each_age[0]+no_teachers)]=1
+    
+    age_category[(no_in_each_age[0]+no_teachers+1):no_agents]=2
+    
+    ##now assign the information to the agents
+    
+    all_agents=[] ##initialise the agents
+
+    ##and then generate them
+
+    for sel_agent in np.arange(no_agents):
+
+        all_agents.append(Agent(sel_agent, no_time_steps, age_category))
+
+    for sel_agent in np.arange(no_agents):
+    
+        sel_agent_info_loc=np.where(model_output[:,0]==sel_agent)[0]
+        
+        sel_agent_info_all_cols=model_output[sel_agent_info_loc,:]
+        
+        sel_agent_info=sel_agent_info_all_cols[:,[1,2,3,4,5,6,7,8,9]]
+        
+        all_agents[sel_agent].agent_info=sel_agent_info
+        
+    ##and load the locations from the old simulations
+    
+    file_name=f"input_files/location_model_output_sci_perspective_{int(inc_science_perspective)}_yai_perspective_{int(inc_walking_perspective)}_stress_decay_0_{int(stress_decay*100)}_prob_teacher_moving_0_{int(prob_teacher_moving*100)}.csv"
+    
+    infile = Path(__file__).parent / file_name
+    
+    model_output_location_file=open(infile)
+    model_output_location_tmp=csv.reader(model_output_location_file)
+    model_output_location=list(model_output_location_tmp)
+    model_output_location=np.array(model_output_location)
+
+    model_output_location=model_output_location.astype(float)
+
+    print("Model location output")
+
+    print(model_output_location)
+    
+    ########
+    
+    ##now assign the information to the agents
+    
+    all_locations=[] ##initialise the agents
+
+    no_locations=int(np.max(model_output_location[:,0]))
+
+    ##and then generate them
+
+    for sel_location in np.arange(no_locations):
+
+        all_locations.append(Location(sel_location, floor_width, floor_length, no_time_steps))
+
+    for sel_location in np.arange(no_locations):
+    
+        sel_location_info_loc=np.where(model_output_location[:,0]==sel_location)[0]
+        
+        sel_location_info_all_cols=model_output_location[sel_location_info_loc,:]
+        
+        sel_location_info=sel_location_info_all_cols[:,[1,2]]
+        
+#        print("sel_location_info")
+        
+ #       print(sel_location_info)
+        
+        all_locations[sel_location].location_info=sel_location_info
+        
     
     ########
     
@@ -390,7 +396,9 @@ def Socits_Model():
 
     plot_type="3"
 
-    sel_time_step=83#input.sel_time_step()
+    sel_time_step=input.sel_time_step()
+    
+    selected_output=3
 
     ##selected output.....
 
@@ -398,13 +406,11 @@ def Socits_Model():
 
     ##4 = loneliness
 
-    if input.output_type()=="Stress":
+#    if input.output_type()=="Stress":
+    
+    #elif input.output_type()=="Loneliness":
 
-        selected_output=3
-        
-    elif input.output_type()=="Loneliness":
-
-        selected_output=4
+     #   selected_output=4
 
     selected_output_name="Stress"
     #selected_output_name="Relationship quality"
