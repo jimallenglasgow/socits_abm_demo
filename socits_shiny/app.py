@@ -49,7 +49,7 @@ with ui.sidebar():
 
 #    ui.input_slider("no_students", "No. students", 1, 200, 100)
     
-    ui.input_slider("sel_time_step", "Time passed", 1, 120, 3)
+    ui.input_slider("sel_time_step", "Time passed", 1, 300, 6)
     
     ui.input_radio_buttons("stress_decay_level", "Deep breath effect", choices=["Low", "High"])
     
@@ -59,7 +59,7 @@ with ui.sidebar():
     
 #    ui.input_checkbox("inc_youth_perspective_input", "Crowdedness is important", False)
     
-    ui.input_checkbox("inc_walking_input", "Which room is important", False)
+    ui.input_checkbox("inc_walking_input", "Where is important", False)
     
 #    ui.input_checkbox("inc_walking_perspective_input", "Include walk persp.", False)
     
@@ -69,7 +69,7 @@ with ui.sidebar():
     
 #    ui.input_radio_buttons("output_type", "Output", choices=["Stress", "Loneliness"])
     
-    ui.input_radio_buttons("plot_type", "Plot type", choices=["Map", "Time", "Situation map"])
+    ui.input_radio_buttons("plot_type", "Plot type", choices=["Map", "Time"])#, "Situation map"])
 
     
 @render.plot(alt="A histogram")
@@ -105,7 +105,7 @@ def Socits_Model():
 
     ##time steps
 
-    no_time_steps=120
+    no_time_steps=500
 
     ##no. of different agent types
 
