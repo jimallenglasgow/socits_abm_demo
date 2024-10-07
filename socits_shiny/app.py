@@ -49,7 +49,7 @@ with ui.sidebar():
 
 #    ui.input_slider("no_students", "No. students", 1, 200, 100)
     
-    ui.input_slider("sel_time_step", "Time passed", 1, 300, 6)
+    ui.input_slider("sel_time_step", "Time passed", 1, 250, 6)
     
     ui.input_radio_buttons("stress_decay_level", "Deep breath effect", choices=["Low", "High"])
     
@@ -59,7 +59,7 @@ with ui.sidebar():
     
 #    ui.input_checkbox("inc_youth_perspective_input", "Crowdedness is important", False)
     
-    ui.input_checkbox("inc_walking_input", "Where is important", False)
+    ui.input_checkbox("inc_walking_input", "Space is important", False)
     
 #    ui.input_checkbox("inc_walking_perspective_input", "Include walk persp.", False)
     
@@ -281,7 +281,9 @@ def Socits_Model():
         
     plot_type="0"
     
-    file_name=f"input_files/model_output_sci_perspective_{int(inc_science_perspective)}_yai_perspective_{int(inc_walking_perspective)}_stress_decay_0_{int(stress_decay*100)}_prob_teacher_moving_0_{int(prob_teacher_moving*100)}.csv"
+#    prob_teacher_moving=prob_teacher_moving*10
+    
+    file_name=f"input_files/model_output_stress_decay_{int(stress_decay*10)}_prob_teacher_moving_{int(prob_teacher_moving*10)}_inc_science_perspective_{inc_science_perspective}_inc_walking_perspective_{inc_walking_perspective}.csv"
     
     infile = Path(__file__).parent / file_name
     
@@ -340,7 +342,7 @@ def Socits_Model():
         
     ##and load the locations from the old simulations
     
-    file_name=f"input_files/location_model_output_sci_perspective_{int(inc_science_perspective)}_yai_perspective_{int(inc_walking_perspective)}_stress_decay_0_{int(stress_decay*100)}_prob_teacher_moving_0_{int(prob_teacher_moving*100)}.csv"
+    file_name=f"input_files/location_model_output_stress_decay_{int(stress_decay*10)}_prob_teacher_moving_{int(prob_teacher_moving*10)}_inc_science_perspective_{inc_science_perspective}_inc_walking_perspective_{inc_walking_perspective}.csv"
     
     infile = Path(__file__).parent / file_name
     
