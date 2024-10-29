@@ -419,7 +419,7 @@ def Update_Location_Graph(all_locations,corridors_open,floor_width,stair_case_wi
     
     ##select two classrooms to be toilets
     
-    non_classrooms=np.random.permutation(poss_classrooms)[0:4]
+    non_classrooms=[9, 49, 150, 189]#np.random.permutation(poss_classrooms)[0:4]
     
     ##and remove them from the list of possible classrooms
     

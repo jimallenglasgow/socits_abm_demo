@@ -111,14 +111,12 @@ def Run_The_Model_Once(all_calibrated_inputs, all_inputs_set_through_data, all_t
     
     ##load in the empirical networks
     
-#    emp_networks=pd.read_csv("C:/Users/jma53d/OneDrive - University of Glasgow/WP3 - ABM/simulation/RQ_inputs.csv")
+    emp_networks=pd.read_csv("C:/Users/jma53d/OneDrive - University of Glasgow/WP3 - ABM/simulation/RQ_inputs.csv")
 
- #   print("emp_networks")
+    print("emp_networks")
 
-  #  print(emp_networks)
-   
-    emp_networks=0
-   
+    print(emp_networks)
+    
     ##Part xxx: initialise the locations
 
     grid_size=0
@@ -339,7 +337,7 @@ def Run_The_Model_Once(all_calibrated_inputs, all_inputs_set_through_data, all_t
 
         all_agents[sel_agent].Initialise_Location(all_locations,assigned_teacher_classrooms, prob_follow_group) ##where do they start?
 
-        all_agents[sel_agent].Initialise_Agent_Location_Time_Stress(all_locations,no_time_steps, mean_time_stress, mean_room_stress, inc_walking_perspective) ##how stressed are they in their initial location
+        all_agents[sel_agent].Initialise_Agent_Location_Time_Stress(all_locations,no_time_steps, mean_time_stress, mean_room_stress, inc_walking_perspective, inc_yais_perspective) ##how stressed are they in their initial location
 
         all_agents[sel_agent].Record_Agent_Info(0) ##save this initial information
 
@@ -366,7 +364,7 @@ def Run_The_Model_Once(all_calibrated_inputs, all_inputs_set_through_data, all_t
 
         ##movement functions
 
-        all_agents[sel_agent].Set_New_Goal_Class(prob_teacher_moving, canteen_prob, 0, prob_follow_group) ##where is the new goal?
+        all_agents[sel_agent].Set_New_Goal_Class(prob_teacher_moving, canteen_prob, 0, prob_follow_group, assigned_teacher_classrooms) ##where is the new goal?
 
         all_agents[sel_agent].Ideal_Goal_Length(all_locations,G) ##how long should it take?
 
@@ -405,6 +403,22 @@ def Run_The_Model_Once(all_calibrated_inputs, all_inputs_set_through_data, all_t
     for time in np.arange(1,no_time_steps): ##run through all the time steps
 
 #        if np.mod(int((time/no_time_steps)*100),10)==0:
+
+        first_moving_time=moving_times[0]
+        
+        if time==first_moving_time:
+            
+                all_students=np.random.permutation(np.arange(no_teachers,no_agents))
+                
+                sel_stressed_students=all_students[0:5]
+                
+#                print("sel_stressed_students")
+                
+ #               print(sel_stressed_students)
+ 
+                for sel_agent in sel_stressed_students:
+                    
+                    all_agents[sel_agent].stress=3
 
         current_moving_time=moving_times[sel_moving_time]
         
@@ -451,12 +465,14 @@ def Run_The_Model_Once(all_calibrated_inputs, all_inputs_set_through_data, all_t
                 sel_moving_time=sel_moving_time+1
             
             current_moving_time=moving_times[sel_moving_time]
+            
+            assigned_teacher_classrooms=np.random.permutation(poss_classrooms)
 
             Set_New_Group_Goals(no_groups, canteen_prob, current_lunch_time, all_agents, no_teachers, no_in_each_age)
 
             for sel_agent in np.arange(no_agents):
 
-                all_agents[sel_agent].Set_New_Goal_Class(prob_teacher_moving, canteen_prob, current_lunch_time, prob_follow_group)
+                all_agents[sel_agent].Set_New_Goal_Class(prob_teacher_moving, canteen_prob, current_lunch_time, prob_follow_group, assigned_teacher_classrooms)
 
                 all_agents[sel_agent].Ideal_Goal_Length(all_locations,G)
 

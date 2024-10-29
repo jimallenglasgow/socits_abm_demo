@@ -65,6 +65,8 @@ class Agent():
         
         self.group_goals=0
         
+        self.teacher_classroom=-1
+        
         #####
         
         ##stress/loneliness values
@@ -81,7 +83,11 @@ class Agent():
 
         self.time_stress=0
         
-        self.status=np.random.random()
+        self.status=0#np.random.random()
+        
+        if self.status<0:
+            
+            self.status=0
         
         self.pos_deg=0
         
@@ -286,6 +292,8 @@ class Agent():
             
             self.goal_location=initial_location ##and also set the goal to the current location for the teachers that don't move
             
+            self.teacher_classroom=initial_location
+            
         self.current_location=initial_location ##and set the current location
 
         current_location_coords=all_locations[initial_location].coords ##set the coordinates...
@@ -352,7 +360,7 @@ class Agent():
     
     ##This assigns a random stress to each classroom for the agent, to match the fact that some classrooms are more or less nice.  The function also does the same for specified time steps, in particular those in the middle 10% and the last 20% of the day.
     
-    def Initialise_Agent_Location_Time_Stress(self,all_locations,no_time_steps, mean_time_stress, mean_room_stress, inc_walking_perspective):
+    def Initialise_Agent_Location_Time_Stress(self,all_locations,no_time_steps, mean_time_stress, mean_room_stress, inc_walking_perspective, inc_yais_perspective):
 
         if self.agent_type!=2: ##if the agent is a student
 
@@ -368,7 +376,7 @@ class Agent():
             
                 ind_time_stress=0
                 
-            if inc_walking_perspective==1:
+            if inc_walking_perspective==1 or inc_yais_perspective==1:
 
                 for time in np.arange(no_time_steps): ##assign the correct stress for each time step
 
@@ -381,17 +389,18 @@ class Agent():
       #                  self.time_stress[time]=ind_time_stress
                         
                 poss_classrooms=self.all_classrooms
-                
+
                 for sel_location in poss_classrooms: ##for each classroom, randomly assign a stress
                     
-                    sel_room_stress=np.random.normal(loc=mean_room_stress, scale=0.1)
+                    sel_room_stress=np.random.normal(loc=mean_room_stress)
                     
                     if sel_room_stress<0:
                     
                         sel_room_stress=0
                     
                     self.location_stress[int(sel_location)]=sel_room_stress
-                
+                    
+
 
     ##################################
     
@@ -407,11 +416,11 @@ class Agent():
     
     ##When a new goal is required, the agent is assigned a new classroom to aim to travel to (note: with some probability this will be their current location).
 
-    def Set_New_Goal_Class(self, prob_teacher_moving, canteen_prob, current_lunch_time, prob_follow_group):
+    def Set_New_Goal_Class(self, prob_teacher_moving, canteen_prob, current_lunch_time, prob_follow_group, assigned_teacher_classrooms):
         
         old_goal=self.goal_location ##register the old goal, as for the teachers the goal may not change
         
-#        sel_goal=old_goal
+        sel_goal=old_goal
     
         agent_type=self.agent_type ##agent type
         
@@ -419,7 +428,25 @@ class Agent():
         
             poss_goal_locations=self.all_classrooms ##the goals are the classrooms
             
-            sel_goal=int(np.random.permutation(poss_goal_locations)[0]) ##select one at random
+            if agent_type!=2:
+            
+                sel_goal=int(np.random.permutation(poss_goal_locations)[0]) ##select one at random
+            
+            if agent_type==2:
+                
+                no_classrooms=len(assigned_teacher_classrooms) ##check the number of classrooms
+        
+                classroom_id=int(np.mod(self.agent_id,no_classrooms)) ##and use the agent ID to work out which class to put the teacher in
+                
+                r=np.random.random()
+                
+                if r<prob_teacher_moving: ##...and by chance they don't move
+                
+                    sel_goal=int(assigned_teacher_classrooms[classroom_id]) ##assign this as the initial location
+                    
+                    self.teacher_classroom=sel_goal
+                    
+                #sel_goal=self.teacher_classroom
 
         if current_lunch_time==1:
             
@@ -439,18 +466,20 @@ class Agent():
                     
                     #print("sel_goal = ",sel_goal)
             
+ #           if agent_type==2: ##if the agent is a teacher....
+
+  #              sel_goal=self.all_staffrooms[0]
+
             if agent_type==2: ##if the agent is a teacher....
-
-                sel_goal=self.all_staffrooms[0]
-
-        if agent_type==2: ##if the agent is a teacher....
-        
-            r=np.random.random()
             
-            if r>prob_teacher_moving: ##...and by chance they don't move
-            
-                sel_goal=old_goal ##set the new goal to the old goal
+                r=np.random.random()
                 
+                sel_goal=self.all_staffrooms[0]
+                
+                if r>prob_teacher_moving: ##...and by chance they don't move
+                
+                    sel_goal=old_goal ##set the new goal to the old goal
+                    
         if agent_type!=2: ##if the agent is not a teacher....
                 
             r=np.random.random()
