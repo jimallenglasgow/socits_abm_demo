@@ -958,17 +958,17 @@ def server(input, output, session):
             
             poss_canteen=all_agents[0].all_canteens
             
-    #        print("poss_classrooms")
+            print("poss_classrooms")
             
-     #       print(poss_classrooms)
+            print(poss_classrooms)
             
-      #      print("poss_toilets")
+            print("poss_toilets")
             
-       #     print(poss_toilets)
+            print(poss_toilets)
             
-        #    print("poss_canteen")
+            print("poss_canteen")
             
-         #   print(poss_canteen)
+            print(poss_canteen)
             
             all_non_corridors=np.hstack([poss_classrooms, poss_toilets, poss_canteen])
             
@@ -982,9 +982,9 @@ def server(input, output, session):
                 
                 for time_step in np.arange(no_time_steps):
                     
-                    agent_loc=int(sel_agent_info[time_step, 8])-1
+                    agent_loc=int(sel_agent_info[time_step, 8])#-1
                     
-            #        print("agent_loc = ",agent_loc)
+#                    print("agent_loc = ",agent_loc)
                     
                     assigned_loc=0
                     

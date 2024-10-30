@@ -341,8 +341,6 @@ def Run_The_Model_Once(all_calibrated_inputs, all_inputs_set_through_data, all_t
 
         all_agents[sel_agent].Initialise_Agent_Location_Time_Stress(all_locations,no_time_steps, mean_time_stress, mean_room_stress, inc_walking_perspective, inc_yais_perspective) ##how stressed are they in their initial location
 
-#        all_agents[sel_agent].Calc_Situational_Loneliness(all_locations)
-
         all_agents[sel_agent].Record_Agent_Info(0) ##save this initial information
 
         
