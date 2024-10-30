@@ -508,7 +508,7 @@ class Agent():
         
         old_goal=self.goal_location ##register the old goal, as for the teachers the goal may not change
         
-        poss_goal_locations=self.all_toilets ##the goals are the classrooms
+        poss_goal_locations=self.all_toilets ##the goals are the toilets
 
         sel_goal=int(np.random.permutation(poss_goal_locations)[0]) ##select one at random
         
