@@ -93,6 +93,8 @@ class Agent():
         
         self.neg_deg=0
         
+        self.location_loneliness=0
+        
         ####
 
         ##interaction variables
@@ -1255,7 +1257,37 @@ class Agent():
         
         self.neg_deg=neg_deg
         
+    ##################################
+    
+    ##this function calculates how lonely individuals are in each situation
+    
+    def Calc_Situational_Loneliness(self, all_locations):
         
+        ##find the friends in the location
+
+        agent_type=self.agent_type ##check the agent type
+
+        if agent_type!=2: ##if the agent is a student
+
+            current_location=self.current_location ##check the current location,
+
+            current_rqs=self.all_rq ##check the focal agents relationship quality with all other agents
+
+            #			print("current_rqs")
+
+            #			print(current_rqs)
+
+            agents_here=(all_locations[current_location].agents_in_location).astype(int) ##and check which other agents are here
+
+            #			print("agents_here")
+
+            #			print(agents_here)
+
+            location_rqs=current_rqs[agents_here] ##and then select the relationship quality of all others present
+            
+            self.location_loneliness=np.sum(location_rqs) ##add up the location RQs for the loneliness of the student
+            
+            
 
 
     ##################################
@@ -1270,7 +1302,7 @@ class Agent():
         
         self.agent_info[time,3]=self.stress
         
-        self.agent_info[time,4]=self.rq
+        self.agent_info[time,4]=self.location_loneliness#self.rq
         
         self.agent_info[time,5]=self.status
         
@@ -1279,6 +1311,8 @@ class Agent():
         self.agent_info[time,7]=self.neg_deg
 
         self.agent_info[time,8]=self.current_location
+        
+        
 
 
 
