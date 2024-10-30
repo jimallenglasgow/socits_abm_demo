@@ -113,7 +113,7 @@ def Run_The_Model_Once(all_calibrated_inputs, all_inputs_set_through_data, all_t
     
     ##load in the empirical networks
     
-    emp_networks=0#pd.read_csv("C:/Users/jma53d/OneDrive - University of Glasgow/WP3 - ABM/simulation/RQ_inputs.csv")
+    emp_networks=0
 
     print("emp_networks")
 
