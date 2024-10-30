@@ -78,6 +78,8 @@ def Run_The_Model_Once(all_calibrated_inputs, all_inputs_set_through_data, all_t
     
     use_emp_networks=all_technical_inputs[20]
     
+    no_initially_stressed_students=all_technical_inputs[21]
+    
     ##parameters set by the data
     
     toilet_prob=all_inputs_set_through_data[0]
@@ -410,7 +412,7 @@ def Run_The_Model_Once(all_calibrated_inputs, all_inputs_set_through_data, all_t
             
                 all_students=np.random.permutation(np.arange(no_teachers,no_agents))
                 
-                sel_stressed_students=all_students[0:5]
+                sel_stressed_students=all_students[0:(int(no_initially_stressed_students)+1)]
                 
 #                print("sel_stressed_students")
                 

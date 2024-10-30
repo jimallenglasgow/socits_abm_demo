@@ -372,8 +372,12 @@ class Agent():
 
             ind_time_stress=np.random.normal(loc=mean_time_stress)#*0.05 ##generate a constant random number for how stressful stressful times are for this agent
             
-            if ind_time_stress<0:
+            if ind_time_stress<0.01:
             
+                ind_time_stress=0
+                
+            if mean_time_stress<0.01:
+                
                 ind_time_stress=0
                 
             if inc_walking_perspective==1 or inc_yais_perspective==1:
@@ -394,8 +398,12 @@ class Agent():
                     
                     sel_room_stress=np.random.normal(loc=mean_room_stress)
                     
-                    if sel_room_stress<0:
+                    if sel_room_stress<0.01:
                     
+                        sel_room_stress=0
+                        
+                    if mean_room_stress<0.01:
+                        
                         sel_room_stress=0
                     
                     self.location_stress[int(sel_location)]=sel_room_stress
@@ -902,6 +910,12 @@ class Agent():
             if self.stress<0: ##make sure the stress is never negative
 
                 self.stress=0
+                
+        ##reset the negative interactions from this interaction
+                
+#        self.neg_int_rec=0
+        
+ #       self.pos_int_rec=0
             
     ##################################
     
@@ -917,7 +931,7 @@ class Agent():
     
     ##This function checks if there was a negative class interaction, and then update the stress accordingly.
             
-    def Update_Stress_Due_To_Class_Interactions(self,stress_through_class_interaction,decrease_in_stress_due_to_pos_int):
+    def Update_Stress_Due_To_Class_Interactions(self, stress_through_class_interaction, decrease_in_stress_due_to_pos_int):
 
         am_bullied=self.neg_class_int_rec ##check if there was a negative class interaction
 
@@ -936,6 +950,12 @@ class Agent():
         if class_int_prov==1:
 
             self.stress=self.stress+stress_through_class_interaction
+            
+        ##set the negative class interaction received or provided back to zero
+            
+        self.neg_class_int_rec=0
+        
+        self.neg_class_int_prov=0
 
         if self.stress<0: ##and then ensure that the stress isn't negative
 
