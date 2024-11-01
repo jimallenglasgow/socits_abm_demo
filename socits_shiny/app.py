@@ -55,7 +55,7 @@ app_ui = ui.page_sidebar(
 
     ui.sidebar(
     
-    ui.input_slider("sel_time_step", "Selected time", 0, 300, 50, step=1),
+    ui.input_numeric("sel_time_step", "Selected time", 60, min=0, step=1),
     
     ui.input_radio_buttons("output_type", "Output of interest", choices=["Stress", "Loneliness"]),
     
@@ -64,6 +64,8 @@ app_ui = ui.page_sidebar(
         ui.accordion(
             ui.accordion_panel(
                 "Initial settings",
+
+                ui.input_numeric("no_time_steps", "Maximum time", 200, min=0, step=10),
 
                 ui.input_slider("no_students", "No. students", 1, 300, 100, step=1),
 
@@ -177,14 +179,8 @@ def server(input, output, session):
     
     ##time steps
 
-    no_time_steps=200
-    
     no_bullies=0
-    
-    moving_times=[10, 40, 60, 80, 110]
 
-    lunch_times=[0, 1, 0, 1, 0]
-    
     ##parameters to include certain perspective (1=include)
 
     inc_science_perspective=1
@@ -209,6 +205,12 @@ def server(input, output, session):
     def Run_The_Shiny_Model():
         
         ##no. of different agent types
+        
+        no_time_steps=input.no_time_steps()
+    
+        moving_times=[10, 40, 60, 80, 110]
+
+        lunch_times=[0, 1, 0, 1, 0]
 
         no_students=input.no_students()
 
@@ -1736,14 +1738,14 @@ def Socits_Model():
     if input.output_type()=="Stress":
 
         selected_output=3
-        
+    
     elif input.output_type()=="Loneliness":
 
         selected_output=4
         
         selected_output_name="Loneliness"
 
-    selected_output_name="Stress"
+    
     #selected_output_name="Relationship quality"
 
     save_animation="No"
