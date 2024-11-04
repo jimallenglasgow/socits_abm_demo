@@ -81,6 +81,8 @@ app_ui = ui.page_sidebar(
 
                 ui.input_slider("canteen_prob", "Prob. eating lunch in the canteen", 0, 1, 0.8),
 
+                
+
 
             ),
                 
@@ -133,11 +135,11 @@ app_ui = ui.page_sidebar(
             ui.accordion_panel(
                 "Student travel pars",
                 
-                ui.input_slider("no_groups", "No. friendship groups", 1, 50, 10, step=1),
+                ui.input_slider("no_groups", "No. friendship groups", 1, 100, 50, step=1),
     
-                ui.input_slider("prob_follow_group", "Prob. follow friends", 0, 1, 0.9),
+                ui.input_slider("prob_follow_group", "Prob. follow friends", 0, 1, 0.5),
 
-                ui.input_slider("move_with_friends", "Prob. move with friends", 0, 1, 0.5),
+                ui.input_slider("move_with_friends", "Prob. move with friends", 0, 1, 0.4),
                 
             ),
 
@@ -207,10 +209,58 @@ def server(input, output, session):
         ##no. of different agent types
         
         no_time_steps=input.no_time_steps()
-    
-        moving_times=[10, 40, 60, 80, 110]
+        
+        no_lessons_in_a_day=7
+        
+        time_needed_to_move=20
+        
+        amount_of_class_time_remaining=no_time_steps-(no_lessons_in_a_day-2)*time_needed_to_move
+        
+        lesson_time=int(amount_of_class_time_remaining/no_lessons_in_a_day)
+        
+        moving_times=np.arange(0, no_time_steps+lesson_time+time_needed_to_move, (lesson_time+time_needed_to_move))+lesson_time
+        
+ #       moving_times[0]=lesson_time
+        
+#        current_time=0
+        
+ #       lesson_indicator=1
+        
+  #      for sel_lesson in np.arange(no_lessons_in_a_day+no_moving_times):
+                
+   #         if lesson_indicator==0:
+            
+    #            time_for_session=time_needed_to_move
+            
+     #           lesson_indicator=1
+            
+      #      elif lesson_indicator==1:
+                
+       #         time_for_session=lesson_time
+            
+        #        lesson_indicator=0
+                
+#            print("Time for session = ",time_for_session)
+            
+#            print("lesson_indicator = ",lesson_indicator)
+            
+         #   current_time=current_time+time_for_session
+            
+          #  moving_times[sel_lesson]=current_time
+                
+        print("Moving times")
+        
+        print(moving_times)
 
-        lunch_times=[0, 1, 0, 1, 0]
+        #moving_times=[10, 40, 60, 80, 110]
+
+        lunch_times=np.zeros(no_lessons_in_a_day)
+
+        lunch_times[2]=1
+        
+        lunch_times[4]=1
+
+#        lunch_times=[0, 1, 0, 1, 0]
 
         no_students=input.no_students()
 
@@ -825,7 +875,7 @@ def server(input, output, session):
             
             selected_output_name="Loneliness"
 
-        selected_output_name="Stress"
+#        selected_output_name="Stress"
         #selected_output_name="Relationship quality"
 
         save_animation="No"
@@ -862,6 +912,10 @@ def server(input, output, session):
             min_all_agent_output=np.min(np.mean(all_agent_output[:,student_agents],axis=0)) ##find the minimum mean output
 
             max_all_agent_output=np.max(np.mean(all_agent_output[:,student_agents],axis=0)) ##and the maximum
+            
+            mean_stress=np.mean(all_agent_output[:,student_agents])
+            
+            print("Mean stress = ",mean_stress)
 
         #      print("min_agent_stress")
 
@@ -906,6 +960,8 @@ def server(input, output, session):
             for plot_agent in sel_agents: ##plot each agent output
 
                 ax.plot(np.arange(no_time_steps), all_agent_output[:,plot_agent])
+                
+            ax.plot(np.arange(no_time_steps), np.ones(no_time_steps)*mean_stress, linestyle="dashed", linewidth=5)
 
             ax.set_xlabel("Time")
 
@@ -1733,11 +1789,13 @@ def Socits_Model():
         model_output=np.vstack([model_output,sel_agent_model_output])
 
 
-    selected_output_name="Stress"
+    
 
     if input.output_type()=="Stress":
 
         selected_output=3
+        
+        selected_output_name="Stress"
     
     elif input.output_type()=="Loneliness":
 
