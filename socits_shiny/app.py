@@ -77,7 +77,7 @@ app_ui = ui.page_sidebar(
                 
                 ui.input_slider("no_initially_stressed_students", "No. initially stressed", 0, 20, 4),
                 
-                ui.input_slider("toilet_prob", "Prob. being in the toilet", 0, 1, 0.4),
+                ui.input_slider("toilet_prob", "Prob. being in the toilet", 0, 0.1, 0.02),
 
                 ui.input_slider("canteen_prob", "Prob. eating lunch in the canteen", 0, 1, 0.8),
 
@@ -466,6 +466,8 @@ def server(input, output, session):
 
         initial_agent_types=initial_agent_type_ordered#np.random.permutation(initial_agent_type_ordered)
 
+        sel_canteen_teacher=np.random.permutation(np.arange(no_teachers))[0]
+
         #print("initial_agent_type")
 
         #print(initial_agent_types)#
@@ -512,7 +514,7 @@ def server(input, output, session):
 
             all_agents[sel_agent].Record_All_Location_Types(all_locations) ##which are the classrooms
 
-            all_agents[sel_agent].Initialise_Agent_Type(initial_agent_types) ##what type are they
+            all_agents[sel_agent].Initialise_Agent_Type(initial_agent_types, sel_canteen_teacher) ##what type are they
             
             all_agents[sel_agent].Initialise_Agent_Class(no_classes,class_prob_dist) ##what class are they?
 
@@ -678,23 +680,9 @@ def server(input, output, session):
                 ##movement functions
 
                 ##and run through the actions of the agent
-                
-                ##decide if an agent should go to the toilet
-                    
-                for sel_agent in np.arange(no_agents):
-
-                    agent_type=all_agents[sel_agent].agent_type ##agent type
-                    
-                    if agent_type==1:
-                    
-                        r=np.random.random()
-                        
-                        if r<toilet_prob: ##...and by chance they don't move
                             
-                            all_agents[sel_agent].Set_New_Goal_Toilet()
+                ##move the agents if it's time
 
-                ##initially don't move the agent for the first ten time steps, but after that move them every 20
-                
                 if time>first_moving_time:
                 
                     ##if the time is larger than the first moving time, move the agent
@@ -723,7 +711,21 @@ def server(input, output, session):
 
                         all_agents[sel_agent].Ideal_Goal_Length(all_locations,G)
 
+                ##decide if an agent should go to the toilet
+                    
+                for sel_agent in np.arange(no_agents):
 
+                    agent_type=all_agents[sel_agent].agent_type ##agent type
+                    
+                    if agent_type==0:
+                    
+                        r=np.random.random()
+                        
+                        if r<toilet_prob: ##...and by chance they don't move
+                            
+                            print("Going to the toilet")
+                            
+                            all_agents[sel_agent].Set_New_Goal_Toilet()
 
                 ##update the location information after these movements
 

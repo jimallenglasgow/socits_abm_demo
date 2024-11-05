@@ -49,13 +49,13 @@ class Agent():
 
         self.current_location=0
         
-        self.goal_j=np.random.permutation([0,9])[0]
+#        self.goal_j=np.random.permutation([0,9])[0]
 
-        self.goal_i=np.random.randint(10)
+ #       self.goal_i=np.random.randint(10)
 
-        self.goal_coord=[self.goal_i,self.goal_j]
+  #      self.goal_coord=[self.goal_i,self.goal_j]
 
-        self.goal_location=10*self.goal_i+self.goal_j
+        self.goal_location=0#10*self.goal_i+self.goal_j
         
         self.journey_time=0
         
@@ -66,6 +66,8 @@ class Agent():
         self.group_goals=0
         
         self.teacher_classroom=-1
+        
+        self.canteen_duty=0
         
         #####
         
@@ -322,9 +324,15 @@ class Agent():
     
     ##A simple function to assign the agent type
 
-    def Initialise_Agent_Type(self,initial_agent_types):
+    def Initialise_Agent_Type(self,initial_agent_types, sel_canteen_teacher):
 
         self.agent_type=initial_agent_types[self.agent_id]
+        
+        if self.agent_id==sel_canteen_teacher:
+            
+            self.canteen_duty=1
+            
+            
 
     ##################################
     
@@ -372,7 +380,7 @@ class Agent():
 
             self.time_stress=np.zeros([no_time_steps]) ##and initialise a vector of stress for each time step
 
-            ind_time_stress=np.random.normal(loc=mean_time_stress)#*0.05 ##generate a constant random number for how stressful stressful times are for this agent
+            ind_time_stress=mean_time_stress#np.random.normal(loc=mean_time_stress)#*0.05 ##generate a constant random number for how stressful stressful times are for this agent
             
             if ind_time_stress<0.01:
             
@@ -448,14 +456,14 @@ class Agent():
         
                 classroom_id=int(np.mod(self.agent_id,no_classrooms)) ##and use the agent ID to work out which class to put the teacher in
                 
-                r=np.random.random()
+#                r=np.random.random()
                 
-                if r<prob_teacher_moving: ##...and by chance they don't move
+ #               if r<prob_teacher_moving: ##...and by chance they don't move
                 
-                    sel_goal=int(assigned_teacher_classrooms[classroom_id]) ##assign this as the initial location
-                    
-                    self.teacher_classroom=sel_goal
-                    
+                sel_goal=int(assigned_teacher_classrooms[classroom_id]) ##assign this as the initial location
+                
+                self.teacher_classroom=sel_goal
+                
                 #sel_goal=self.teacher_classroom
 
         if current_lunch_time==1:
@@ -489,6 +497,10 @@ class Agent():
                 if r>prob_teacher_moving: ##...and by chance they don't move
                 
                     sel_goal=old_goal ##set the new goal to the old goal
+                    
+                if self.canteen_duty==1:
+                    
+                    sel_goal=self.all_canteens[0]
                     
         if agent_type!=2: ##if the agent is not a teacher....
                 
@@ -866,11 +878,17 @@ class Agent():
                 
             no_teachers=agent_types_here[2]
 
-            if no_agents_here>crowded_threshold and no_teachers==0 and is_loc_classroom==0: ##if the number of others is larger than the threshold, there are no teachers and the location isn't a classroom - add to the stress 
+            if no_agents_here>crowded_threshold and is_loc_classroom==0: ##if the number of others is larger than the threshold, there are no teachers and the location isn't a classroom - add to the stress 
 
-                self.stress=self.stress+crowded_stress
+                if no_teachers==0:
 
+                    self.stress=self.stress+crowded_stress
+                    
+                else:
+                    
+                    self.stress=self.stress+crowded_stress/2
 
+                    
     ##################################
     
     ##this function updates the stress of an individual due to any positive or negative interactions that have taken place
