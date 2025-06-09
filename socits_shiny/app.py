@@ -65,21 +65,10 @@ app_ui = ui.page_sidebar(
             ui.accordion_panel(
                 "Initial settings",
 
-                ui.input_numeric("no_time_steps", "Maximum time", 200, min=0, step=10),
+                ui.input_slider("no_time_steps", "No. time steps", 10, 1000, 100, step = 1),
+                ui.input_slider("no_students", "No. students", 10, 1000, 300, step = 1),
 
-                ui.input_slider("no_students", "No. students", 1, 300, 100, step=1),
-
-                ui.input_slider("no_teachers", "No. teachers", 1, 50, 10, step=1),
-                
-                ui.input_slider("stress_decay_level", "Stress decay rate", 0, 1, 0.2),
-
-                ui.input_slider("prob_teacher_moving", "Prob. teacher moving", 0, 1, 0.5),
-                
-                ui.input_slider("no_initially_stressed_students", "No. initially stressed", 0, 20, 4),
-                
-                ui.input_slider("toilet_prob", "Prob. being in the toilet", 0, 0.1, 0.02),
-
-                ui.input_slider("canteen_prob", "Prob. eating lunch in the canteen", 0, 1, 0.8),
+                ui.input_slider("stress_decay", "Stress decay", 0, 1, 0.5),
 
                 
 
@@ -91,9 +80,6 @@ app_ui = ui.page_sidebar(
                 
                 ##background features
     
-                ui.input_slider("mean_room_stress", "Mean room stress", 0, 5.0, 0.1),
-                
-                ui.input_slider("mean_time_stress", "Mean time stress", 0, 5.0, 0.1),
                 
             ),
             
@@ -102,11 +88,6 @@ app_ui = ui.page_sidebar(
                 
                 ##triggers
 
-                ui.input_slider("status_threshold", "Status threshold", 0, 5.0, 1),
-
-                ui.input_slider("stress_bully_scale", "Stress bully scale", 0, 5.0, 1),
-
-                ui.input_slider("crowded_threshold", "No. others needed for crowding stress", 0, 10, 2, step=1),
                 
             ),
 
@@ -115,19 +96,7 @@ app_ui = ui.page_sidebar(
                 
                 ##consequences
 
-                ui.input_slider("increase_in_stress_due_to_neg_int", "Stress inc. through neg. int.", 0, 5.0, 1.2),
 
-                ui.input_slider("decrease_in_stress_due_to_pos_int", "Stress dec. through pos. int.", 0, 5.0, 0.2),
-
-                ui.input_slider("status_increase", "Status inc. through neg. int.", 0, 5.0, 1),
-
-                ui.input_slider("status_decrease", "Status dec. through neg. int.", 0, 5.0, 1),
-
-                ui.input_slider("crowded_stress", "Stress due to crowding", 0, 5.0, 1),
-
-                ui.input_slider("journey_stress", "Stress due to lateness", 0, 5.0, 1),
-
-                ui.input_slider("stress_through_class_interaction", "Stress through uniform int.", 0, 5.0, 1),
                 
             ),
               
@@ -135,11 +104,7 @@ app_ui = ui.page_sidebar(
             ui.accordion_panel(
                 "Student travel pars",
                 
-                ui.input_slider("no_groups", "No. friendship groups", 1, 100, 50, step=1),
-    
-                ui.input_slider("prob_follow_group", "Prob. follow friends", 0, 1, 0.5),
 
-                ui.input_slider("move_with_friends", "Prob. move with friends", 0, 1, 0.4),
                 
             ),
 
@@ -167,197 +132,169 @@ app_ui = ui.page_sidebar(
 
 def server(input, output, session):
     
+    ##some general inputs
+    
     map_type="school"
-
-    floor_width=10
-
-    floor_length=10
-
-    stair_case_width=5
-
-    corridor_width=1
     
-    use_emp_networks=0
+    plot_type="0"
     
-    ##time steps
+    full_emp_network=0
 
-    no_bullies=0
+    all_agent_emp_inputs=0
 
-    ##parameters to include certain perspective (1=include)
+    emp_SAM2=0
 
-    inc_science_perspective=1
+    no_emp_students=0
     
+    use_emp_data=0
+
+    display_some_outputs=1
+    
+    ##and the set inputs
+
+    inc_science_perspective=0
     inc_walking_perspective=1
-
     inc_yais_perspective=1
-
     inc_teacher_perspective=1
+    stress_decay=0.5
+    status_threshold=5
+    increase_in_stress_due_to_neg_int=25
+    decrease_in_stress_due_to_pos_int=25
+    rq_decrease_through_bullying=5e-04
+    rq_increase_through_support=5e-04
+    crowded_threshold=5e-04
+    crowded_stress=5e-04
+    journey_stress=5e-04
+    stress_bully_scale=1
+    stress_through_class_interaction=25
+    prob_teacher_moving=0.5
+    status_increase=5e-04
+    status_decrease=5e-04
+    mean_time_stress=-0.995
+    mean_room_stress=-0.995
+    prob_follow_group=0.5
+    teacher_standards_mean=3.005
+    teacher_standards_sd=0.5
+    student_standards_mean=2.5
+    student_standards_sd=0.5
+    standards_interaction_scale=1.0005
+    initial_status_mean=2.5
+    initial_status_sd=5
+    reduction_due_to_teacher_presence=0.5
+    rq_mean=0
+    rq_sd=1
+    initial_stress_scale=1
+    stair_case_width=5
+    corridor_width=2
+    classroom_size=2
+    no_classrooms_per_corridor=5
+    floor_length=10
+    toilets_loc_1=1
+    toilets_loc_2=15
+    canteen_loc=13
+    staffroom_loc=6
+    no_time_steps=100
+    no_students=300
+    no_bullies=0
+    no_initially_stressed_students=0
+    no_boys_in_each_age=100
+    no_girls_in_each_age=100
+    class_length=40
+    toilet_prob=0.002
+    canteen_prob=0.5
+
+    non_classrooms=[toilets_loc_1, toilets_loc_2, canteen_loc, staffroom_loc]
     
-    rq_decrease_through_bullying=0 ##change in relationship quality due to a negative interaction
-
-    rq_increase_through_support=0 ##change in relationship quality due to a positive interaction
+    floor_width=no_classrooms_per_corridor*classroom_size+(no_classrooms_per_corridor-1)
     
-    ##triggers
-
-    no_classes=4 ##no. of different possible classes
-
-    class_prob_dist=[0.25,0.25,0.25,0.25] ##how these classes are distributed in the population
-
     @reactive.calc()
     def Run_The_Shiny_Model():
         
-        ##no. of different agent types
-        
+        stress_decay=input.stress_decay()
         no_time_steps=input.no_time_steps()
-        
-        no_lessons_in_a_day=7
-        
-        time_needed_to_move=20
-        
-        amount_of_class_time_remaining=no_time_steps-(no_lessons_in_a_day-2)*time_needed_to_move
-        
-        lesson_time=int(amount_of_class_time_remaining/no_lessons_in_a_day)
-        
-        moving_times=np.arange(0, no_time_steps+lesson_time+time_needed_to_move, (lesson_time+time_needed_to_move))+lesson_time
-        
- #       moving_times[0]=lesson_time
-        
-#        current_time=0
-        
- #       lesson_indicator=1
-        
-  #      for sel_lesson in np.arange(no_lessons_in_a_day+no_moving_times):
-                
-   #         if lesson_indicator==0:
-            
-    #            time_for_session=time_needed_to_move
-            
-     #           lesson_indicator=1
-            
-      #      elif lesson_indicator==1:
-                
-       #         time_for_session=lesson_time
-            
-        #        lesson_indicator=0
-                
-#            print("Time for session = ",time_for_session)
-            
-#            print("lesson_indicator = ",lesson_indicator)
-            
-         #   current_time=current_time+time_for_session
-            
-          #  moving_times[sel_lesson]=current_time
-                
-        print("Moving times")
-        
-        print(moving_times)
-
-        #moving_times=[10, 40, 60, 80, 110]
-
-        lunch_times=np.zeros(no_lessons_in_a_day)
-
-        lunch_times[2]=1
-        
-        lunch_times[4]=1
-
-#        lunch_times=[0, 1, 0, 1, 0]
-
         no_students=input.no_students()
-
-        no_teachers=input.no_teachers()
-
-        no_agents=no_students+no_teachers
         
-        no_initially_stressed_students=input.no_initially_stressed_students()
-
-  #      no_groups=input.no_groups()
-
-        ##parameters common to all perspectives
-
-        stress_decay=input.stress_decay_level()
-        
-        no_groups=input.no_groups()
-
-        prob_teacher_moving=input.prob_teacher_moving() ##the probability of a teacher moving around the school
-            
-        move_with_friends=input.move_with_friends() ##should individuals try to move with friends?  1==Yes, 0==No
-
-        mean_time_stress=input.mean_time_stress() ##the mean of the normal distribution for the time stress
-
-        mean_room_stress=input.mean_room_stress()
-        
-        toilet_prob=input.toilet_prob()#0.4 ##probability of any student going to the toilet at any one time
-
-        canteen_prob=input.canteen_prob()#0.8 ##probability of any student eating lunch in the canteen
-
-        prob_follow_group=input.prob_follow_group()#0.9
-
-        ##science model
-
-        ##triggers
-
-        status_threshold=input.status_threshold()#1 ##theshold for the status difference before a negative interaction
-
-        stress_bully_scale=input.stress_bully_scale()#1
-
-        ##consequences
-
-        increase_in_stress_due_to_neg_int=input.increase_in_stress_due_to_neg_int()#1.2 ##change in stress due to a negative interaction
-
-        decrease_in_stress_due_to_pos_int=input.decrease_in_stress_due_to_pos_int()#0.2 ##change in stress due to a positive interaction
-
-        status_increase=input.status_increase()#1 ##increase in status if an individual interacts negatively
-
-        status_decrease=input.status_decrease()#1 ##decrease in status if an individual receives a negative interaction
-
-        ##yai's model
-
-        ##triggers
-
-        crowded_threshold=input.crowded_threshold()#2 ##number of others in a location before stress increases
-
-        ##consequences
-
-        crowded_stress=input.crowded_stress()#1 ##the amount by which stress increases due to crowdedness
-
-        journey_stress=input.journey_stress()#1 ##stress increase if a journey is disrupted
-
-        ##walking interviews model
-
-        ##No additional parameters required
-
-        ##consequences
-
-        stress_through_class_interaction=input.stress_through_class_interaction()#1 ##stress increase due to negative interaction between students and teachers
+        selected_students=np.arange(no_students)
 
         ########################################################
 
-        ##Part C: run the model
+        ##run the model
 
-        ##the following line calls the function "Run_The_Model_Once" in the file "run_single_model_function.py" to run the model, and returns all of the agents information in each time step
-            
-        plot_type="0"
-        
-        all_technical_inputs=[plot_type, map_type, floor_width, floor_length, stair_case_width, corridor_width, no_time_steps, no_students, no_teachers, no_bullies,inc_science_perspective, inc_walking_perspective, inc_yais_perspective, inc_teacher_perspective, no_classes, moving_times, move_with_friends, lunch_times, no_groups, class_prob_dist, use_emp_networks, no_initially_stressed_students]
-
-        all_inputs_set_through_data=[toilet_prob, canteen_prob]
-
-        all_calibrated_inputs=[stress_decay, status_threshold, increase_in_stress_due_to_neg_int, decrease_in_stress_due_to_pos_int, rq_decrease_through_bullying,rq_increase_through_support, crowded_threshold, crowded_stress, journey_stress, stress_bully_scale, stress_through_class_interaction, prob_teacher_moving, status_increase, status_decrease, mean_time_stress, mean_room_stress, prob_follow_group]
-
-        print("Run the model")
-
-        #all_outputs=Run_The_Model_Once(all_calibrated_inputs, all_inputs_set_through_data, all_technical_inputs)
-        
         #############
-    
-        ##load in the empirical networks
+
+        ##generate other required parameters
         
+        no_teachers=(no_classrooms_per_corridor-1)*4+2
+
+        no_age_groups=1#len(no_boys_in_each_age)
+
+        no_agents=no_students+no_teachers
+
+        no_groups=int(no_students/4)
+
+        moving_times=np.arange(10, no_time_steps, class_length).astype(int)#[5, 25, 50, 75]
+        
+        lunch_time_ids=np.zeros(2)
+        
+        lunch_times=np.zeros(len(moving_times))#[0, 0, 0, 0]
+        
+        if no_time_steps>(class_length+10):
+        
+            lunch_1=int(len(moving_times)/2)
+            lunch_2=int(len(moving_times)/2)+1
+        
+            lunch_time_ids[0]=lunch_1
+            lunch_time_ids[1]=lunch_2    
+
+            lunch_times[int(lunch_time_ids[0])]=1
+            
+            if lunch_2<len(moving_times):
+            
+                lunch_times[int(lunch_time_ids[1])]=1
+            #lunch_times[7]=1
+            
+            
+            
+        
+        non_classrooms=[toilets_loc_1, toilets_loc_2, canteen_loc, staffroom_loc]
+        
+        floor_width=no_classrooms_per_corridor*classroom_size+(no_classrooms_per_corridor-1)
+        
+        initial_rq_inputs=[rq_mean, rq_sd]
+
+        initial_status_inputs=[initial_status_mean, initial_status_sd]
+            
+        student_teacher_pars=[teacher_standards_mean, teacher_standards_sd, student_standards_mean, student_standards_sd]
+
+        #######################################################################################
+        
+        ##generate the input data based on the actual data
+        
+        sel_rows=selected_students
+
         emp_networks=0
 
-        print("emp_networks")
+        agent_emp_inputs=0
 
-        print(emp_networks)
+        if use_emp_data==1:
+            
+            agent_emp_inputs=all_agent_emp_inputs.iloc[sel_rows, ]
+
+            sel_row_cols=selected_students-1
+
+            emp_networks=full_emp_network.iloc[sel_row_cols, sel_row_cols]
+            
+            print("Sel emp network")
+
+            print(emp_network)
         
+        
+        
+        
+        
+        
+        #######################################################################################
+
         ##Part xxx: initialise the locations
 
         grid_size=0
@@ -372,7 +309,7 @@ def server(input, output, session):
 
             grid_width=2*floor_width+stair_case_width ##width of the grid
             
-            grid_length=floor_width ##length of the grid
+            grid_length=floor_length ##length of the grid
 
             no_locations=grid_width*grid_length ##one location for each grid point
 
@@ -380,11 +317,19 @@ def server(input, output, session):
         
     #        if input.update_geography()=="1":
         
+        sel_location=0
         
+        for x_coord in np.arange(grid_width):
+            
+            for y_coord in np.arange(grid_length):
+            
+                all_locations.append(Location(sel_location, [x_coord, y_coord], no_time_steps))
         
-        for sel_location in np.arange(no_locations): ##and then initialise them
+                sel_location=sel_location+1
         
-            all_locations.append(Location(sel_location, floor_width, floor_length, no_time_steps))
+    #    for sel_location in np.arange(no_locations): ##and then initialise them
+        
+     #       all_locations.append(Location(sel_location, floor_width*2+stair_case_width, floor_length, no_time_steps))
      
         ##commented code to check that it worked
      
@@ -429,7 +374,7 @@ def server(input, output, session):
 
             corridors_open=0
             
-            G=Update_Location_Graph(all_locations,corridors_open,floor_width,stair_case_width,corridor_width)
+            G=Update_Location_Graph(all_locations, corridors_open, floor_width, stair_case_width, corridor_width, classroom_size, no_classrooms_per_corridor, non_classrooms, floor_length, display_some_outputs)
                     
             corridors_open=1
                     
@@ -465,7 +410,7 @@ def server(input, output, session):
         #print(initial_agent_type_ordered)
 
         initial_agent_types=initial_agent_type_ordered#np.random.permutation(initial_agent_type_ordered)
-
+        
         sel_canteen_teacher=np.random.permutation(np.arange(no_teachers))[0]
 
         #print("initial_agent_type")
@@ -478,27 +423,17 @@ def server(input, output, session):
         
         age_category=np.zeros(no_agents)
         
-        if use_emp_networks==1:
+        no_in_each_age_tmp=int((no_agents-no_teachers)/2)
         
-            no_in_each_age=[171, 205]
-            
-        else:
-            
-            no_in_each_age_tmp=int((no_agents-no_teachers)/2)
-            
-            no_in_each_age=np.zeros(2).astype(int)
-            
-            no_in_each_age[0]=int(no_in_each_age_tmp)
-            
-            no_in_each_age[1]=int(no_in_each_age_tmp)
+        no_in_each_age=np.zeros(2).astype(int)
+        
+        no_in_each_age[0]=int(no_in_each_age_tmp)
+        
+        no_in_each_age[1]=int(no_in_each_age_tmp)
             
         age_category[no_teachers:(no_in_each_age[0]+no_teachers)]=1
         
         age_category[(no_in_each_age[0]+no_teachers+1):no_agents]=2
-        
-        
-            
-            
         
         #########
         
@@ -508,7 +443,7 @@ def server(input, output, session):
 
         for sel_agent in np.arange(no_agents):
 
-            all_agents.append(Agent(sel_agent, no_time_steps, age_category))
+            all_agents.append(Agent(sel_agent, no_time_steps, age_category, initial_status_inputs, agent_emp_inputs, initial_stress_scale, no_teachers, use_emp_data))
 
         for sel_agent in np.arange(no_agents):
 
@@ -516,7 +451,7 @@ def server(input, output, session):
 
             all_agents[sel_agent].Initialise_Agent_Type(initial_agent_types, sel_canteen_teacher) ##what type are they
             
-            all_agents[sel_agent].Initialise_Agent_Class(no_classes,class_prob_dist) ##what class are they?
+            all_agents[sel_agent].Initialise_Agent_Class(student_teacher_pars) ##what class are they?
 
         ##permute all the classrooms so that we can assign them to teachers
 
@@ -534,15 +469,15 @@ def server(input, output, session):
 
         for sel_agent in np.arange(no_agents):
 
-            all_agents[sel_agent].Initialise_RQ(all_agents, emp_networks, initial_agent_types, no_teachers, use_emp_networks) ##initialise the social network
+            all_agents[sel_agent].Initialise_RQ(all_agents, emp_networks, initial_agent_types, no_teachers, initial_rq_inputs) ##initialise the social network
             
         S2_agent_ids=np.where(age_category==1)[0]
         
         S4_agent_ids=np.where(age_category==2)[0]
         
-        print("S4_agents")
+     #   print("S4_agents")
         
-        print(S4_agent_ids)
+      #  print(S4_agent_ids)
             
         S2_agents=[]
             
@@ -560,9 +495,9 @@ def server(input, output, session):
         
         assigned_groups=Assign_Groups(S4_agents, int(no_groups/2))
 
-        print("assigned_groups")
+    #    print("assigned_groups")
 
-        print(assigned_groups)
+     #   print(assigned_groups)
         
         for i in S4_agent_ids:
             
@@ -574,7 +509,7 @@ def server(input, output, session):
         
       #  print(all_agents[250].movement_group)
 
-        Set_New_Group_Goals(no_groups, canteen_prob, 0, all_agents, no_teachers, no_in_each_age)
+        Set_New_Group_Goals(no_groups, canteen_prob, 0, all_agents, no_teachers, no_in_each_age, all_locations)
 
         for sel_agent in np.arange(no_agents):
 
@@ -607,7 +542,7 @@ def server(input, output, session):
 
             ##movement functions
 
-            all_agents[sel_agent].Set_New_Goal_Class(prob_teacher_moving, canteen_prob, 0, prob_follow_group, assigned_teacher_classrooms) ##where is the new goal?
+            all_agents[sel_agent].Set_New_Goal_Class(prob_teacher_moving, canteen_prob, 0, prob_follow_group, assigned_teacher_classrooms, all_locations) ##where is the new goal?
 
             all_agents[sel_agent].Ideal_Goal_Length(all_locations,G) ##how long should it take?
 
@@ -643,184 +578,182 @@ def server(input, output, session):
         
         no_moving_times=len(moving_times)
         
-        with ui.Progress(min=1, max=no_time_steps) as p:
+        for time in np.arange(1,no_time_steps): ##run through all the time steps
+
+    #        if np.mod(int((time/no_time_steps)*100),10)==0:
+
+            first_moving_time=moving_times[0]
             
-            p.set(message="Model running", detail="This may take a while...")
-        
-            for time in np.arange(1,no_time_steps): ##run through all the time steps
+            if time==first_moving_time:
                 
-                p.set(time, message="Running")
-
-        #        if np.mod(int((time/no_time_steps)*100),10)==0:
-
-                first_moving_time=moving_times[0]
-                
-                if time==first_moving_time:
+                    all_students=np.random.permutation(np.arange(no_teachers,no_agents))
                     
-                        all_students=np.random.permutation(np.arange(no_teachers,no_agents))
+                    sel_stressed_students=all_students[0:(int(no_initially_stressed_students))]
+                    
+    #                print("sel_stressed_students")
+                    
+     #               print(sel_stressed_students)
+     
+                    for sel_agent in sel_stressed_students:
                         
-                        sel_stressed_students=all_students[0:(int(no_initially_stressed_students)+1)]
-                        
-        #                print("sel_stressed_students")
-                        
-         #               print(sel_stressed_students)
-         
-                        for sel_agent in sel_stressed_students:
-                            
-                            all_agents[sel_agent].stress=3
+                        all_agents[sel_agent].stress=3
 
-                current_moving_time=moving_times[sel_moving_time]
-                
-                current_lunch_time=lunch_times[sel_moving_time] ##is it currently lunch time?
-                
+            current_moving_time=moving_times[sel_moving_time]
+            
+            current_lunch_time=lunch_times[sel_moving_time] ##is it currently lunch time?
+            
+            if display_some_outputs==1:
+            
                 print("%age done = ",np.round(time/no_time_steps*100),"%", end="\r")
 
-                ################
+            ################
 
-                ##movement functions
+            ##movement functions
 
-                ##and run through the actions of the agent
-                            
-                ##move the agents if it's time
-
-                if time>first_moving_time:
+            ##and run through the actions of the agent
+            
+            ##decide if an agent should go to the toilet
                 
-                    ##if the time is larger than the first moving time, move the agent
+            for sel_agent in np.arange(no_agents):
 
-                    for sel_agent in np.arange(no_agents):
-
-                        all_agents[sel_agent].Move_Agent(all_locations,G_current)
-                    
-                ##move the agent every set time steps, and reset the goal and the ideal goal length
-
-                if time==current_moving_time:
+                agent_type=all_agents[sel_agent].agent_type ##agent type
                 
-                    if sel_moving_time<no_moving_times-1:
+                if agent_type==0:
                 
-                        sel_moving_time=sel_moving_time+1
+                    r=np.random.random()
                     
-                    current_moving_time=moving_times[sel_moving_time]
-                    
-                    assigned_teacher_classrooms=np.random.permutation(poss_classrooms)
-
-                    Set_New_Group_Goals(no_groups, canteen_prob, current_lunch_time, all_agents, no_teachers, no_in_each_age)
-
-                    for sel_agent in np.arange(no_agents):
-
-                        all_agents[sel_agent].Set_New_Goal_Class(prob_teacher_moving, canteen_prob, current_lunch_time, prob_follow_group, assigned_teacher_classrooms)
-
-                        all_agents[sel_agent].Ideal_Goal_Length(all_locations,G)
-
-                ##decide if an agent should go to the toilet
-                    
-                for sel_agent in np.arange(no_agents):
-
-                    agent_type=all_agents[sel_agent].agent_type ##agent type
-                    
-                    if agent_type==0:
-                    
-                        r=np.random.random()
+                    if r<toilet_prob: ##...and by chance they don't move
                         
-                        if r<toilet_prob: ##...and by chance they don't move
-                            
-                            print("Going to the toilet")
-                            
-                            all_agents[sel_agent].Set_New_Goal_Toilet()
-
-                ##update the location information after these movements
-
-                for sel_location in np.arange(no_locations):
-
-                    all_locations[sel_location].Calc_No_Agents_In_Location(all_agents)
-
-                    all_locations[sel_location].Calc_No_Agent_Types_In_Location(all_agents)
-
-                    all_locations[sel_location].Calc_Agent_Status_In_Location(all_agents)
-
-                    all_locations[sel_location].Which_Agents_In_Location(all_agents)
-                    
-                    all_locations[sel_location].Calc_Agent_Stress_And_Loneliness_In_Location(all_agents)
-                    
-                    all_locations[sel_location].Record_Location_Info(time)
-
-                ################
-                
-                ##decide which interactions occur
-
-                ##negative interactions
-
-                for sel_agent in np.arange(no_agents):
-
-                    all_agents[sel_agent].Decide_Negative_Interaction(all_agents,all_locations,status_threshold,stress_bully_scale)
-
-                    all_agents[sel_agent].Decide_Negative_Class_Interaction(all_agents,all_locations)
-
-                ##################
-
-                ##positive interactions (possibly in response to bullying)
-
-                for sel_agent in np.arange(no_agents):
-
-                    all_agents[sel_agent].Decide_Positive_Interaction(all_agents,all_locations)
-
-                ################
-
-                ##update stress, rq and status based on which perspectives are included
-                
-                if inc_science_perspective==1:
-
-                    for sel_agent in np.arange(no_agents):
-
-                        all_agents[sel_agent].Update_Stress_Due_To_Interactions(all_locations,all_agents,increase_in_stress_due_to_neg_int,decrease_in_stress_due_to_pos_int)
-
-                        all_agents[sel_agent].Update_Status(status_increase,status_decrease)
-
-                        all_agents[sel_agent].Update_Loneliness_Calc()
-
-                        all_agents[sel_agent].Update_All_RQ_Based_On_Interaction(rq_decrease_through_bullying,rq_increase_through_support)
-
-                if inc_walking_perspective==1 or inc_yais_perspective==1:
-
-                    for sel_agent in np.arange(no_agents):
+                        #print("Toilet!")
                         
-                        all_agents[sel_agent].Decide_If_Stressed_Due_To_Time(all_locations,status_threshold,time)
+                        all_agents[sel_agent].Set_New_Goal_Toilet(all_locations)
 
-                        all_agents[sel_agent].Decide_If_Stressed_Due_To_Location(all_locations,status_threshold,time)
+            ##initially don't move the agent for the first ten time steps, but after that move them every 20
+            
+            if time>first_moving_time:
+            
+                ##if the time is larger than the first moving time, move the agent
 
-                        all_agents[sel_agent].Decide_If_Stressed_Due_To_Crowdedness(all_locations,crowded_threshold,crowded_stress)
-                        
-                if inc_yais_perspective==1:
+                for sel_agent in np.arange(no_agents):
 
-                    for sel_agent in np.arange(no_agents):
-
-                        #print("Journey time = ",all_agents[sel_agent].journey_time,", Ideal journey time = ",all_agents[sel_agent].ideal_goal_length)
-                        
-                        all_agents[sel_agent].Decide_If_Stressed_Due_To_Delay(journey_stress)
-
-                    
-                if inc_teacher_perspective==1:
+                    all_agents[sel_agent].Move_Agent(all_locations,G_current)
                 
-                    for sel_agent in np.arange(no_agents):
+            ##move the agent every set time steps, and reset the goal and the ideal goal length
 
-                        all_agents[sel_agent].Update_Stress_Due_To_Class_Interactions(stress_through_class_interaction,decrease_in_stress_due_to_pos_int)
-                    
-                for sel_agent in np.arange(no_agents):
-                    
-                    all_agents[sel_agent].Decay_Stress(stress_decay, time)
-                    
-                    all_agents[sel_agent].Calc_Network_Degree()
-                    
-                    all_agents[sel_agent].Calc_Situational_Loneliness(all_locations)
+            if time==current_moving_time:
+            
+                if sel_moving_time<no_moving_times-1:
+            
+                    sel_moving_time=sel_moving_time+1
+                
+                current_moving_time=moving_times[sel_moving_time]
+                
+                assigned_teacher_classrooms=np.random.permutation(poss_classrooms)
 
-                ################
-
-                ##record the info
+                Set_New_Group_Goals(no_groups, canteen_prob, current_lunch_time, all_agents, no_teachers, no_in_each_age, all_locations)
 
                 for sel_agent in np.arange(no_agents):
 
-                    all_agents[sel_agent].Record_Agent_Info(time)
+                    all_agents[sel_agent].Set_New_Goal_Class(prob_teacher_moving, canteen_prob, current_lunch_time, prob_follow_group, assigned_teacher_classrooms, all_locations)
+
+                    all_agents[sel_agent].Ideal_Goal_Length(all_locations,G)
+
+
+
+            ##update the location information after these movements
+
+            for sel_location in np.arange(no_locations):
+
+                all_locations[sel_location].Calc_No_Agents_In_Location(all_agents)
+
+                all_locations[sel_location].Calc_No_Agent_Types_In_Location(all_agents)
+
+                all_locations[sel_location].Calc_Agent_Status_In_Location(all_agents)
+
+                all_locations[sel_location].Which_Agents_In_Location(all_agents)
+                
+                all_locations[sel_location].Calc_Agent_Stress_And_Loneliness_In_Location(all_agents)
+                
+                all_locations[sel_location].Record_Location_Info(time)
+
+            ################
+            
+            ##decide which interactions occur
+
+            ##negative interactions
+
+            for sel_agent in np.arange(no_agents):
+
+                all_agents[sel_agent].Decide_Negative_Interaction(all_agents, all_locations, status_threshold, stress_bully_scale)
+
+                all_agents[sel_agent].Decide_Negative_Class_Interaction(all_agents, all_locations, standards_interaction_scale)
+
+            ##################
+
+            ##positive interactions (possibly in response to bullying)
+
+            for sel_agent in np.arange(no_agents):
+
+                all_agents[sel_agent].Decide_Positive_Interaction(all_agents,all_locations)
+
+            ################
+
+            ##update stress, rq and status based on which perspectives are included
+            
+            if inc_science_perspective==1:
+
+                for sel_agent in np.arange(no_agents):
+
+                    all_agents[sel_agent].Update_Stress_Due_To_Interactions(all_locations, all_agents, increase_in_stress_due_to_neg_int, decrease_in_stress_due_to_pos_int, reduction_due_to_teacher_presence)
+
+                    all_agents[sel_agent].Update_Status(status_increase,status_decrease)
+
+                    all_agents[sel_agent].Update_Loneliness_Calc()
+
+                    all_agents[sel_agent].Update_All_RQ_Based_On_Interaction(rq_decrease_through_bullying,rq_increase_through_support)
+
+            if inc_walking_perspective==1 or inc_yais_perspective==1:
+
+                for sel_agent in np.arange(no_agents):
                     
-        all_outputs=[all_agents, all_locations]
+                    all_agents[sel_agent].Decide_If_Stressed_Due_To_Time(all_locations,status_threshold,time)
+
+                    all_agents[sel_agent].Decide_If_Stressed_Due_To_Location(all_locations,status_threshold,time)
+
+                    all_agents[sel_agent].Decide_If_Stressed_Due_To_Crowdedness(all_locations,crowded_threshold,crowded_stress)
+                    
+            if inc_yais_perspective==1:
+
+                for sel_agent in np.arange(no_agents):
+
+                    #print("Journey time = ",all_agents[sel_agent].journey_time,", Ideal journey time = ",all_agents[sel_agent].ideal_goal_length)
+                    
+                    all_agents[sel_agent].Decide_If_Stressed_Due_To_Delay(journey_stress)
+
+                
+            if inc_teacher_perspective==1:
+            
+                for sel_agent in np.arange(no_agents):
+
+                    all_agents[sel_agent].Update_Stress_Due_To_Class_Interactions(stress_through_class_interaction, decrease_in_stress_due_to_pos_int)
+                
+            for sel_agent in np.arange(no_agents):
+                
+                all_agents[sel_agent].Decay_Stress(stress_decay, time)
+                
+                all_agents[sel_agent].Calc_Network_Degree()
+                
+                all_agents[sel_agent].Calc_Situational_Loneliness(all_locations)
+
+            ################
+
+            ##record the info
+
+            for sel_agent in np.arange(no_agents):
+
+                all_agents[sel_agent].Record_Agent_Info(time)
+                    
+            all_outputs=[all_agents, all_locations]
         
         return all_outputs
     
@@ -835,7 +768,7 @@ def server(input, output, session):
     def Plot_Model_Output():
         
         sel_time_step=input.sel_time_step()
-            
+        
         print("Now run the model")
         
         all_outputs=Run_The_Shiny_Model()
@@ -989,25 +922,29 @@ def server(input, output, session):
                 
                 all_agent_types[sel_agent]=all_agents[sel_agent].agent_info[0,2] ##and the types
                 
-            print("All agent output")
+    #        print("All agent output")
             
-            print(all_agent_output)
+     #       print(all_agent_output)
                 
             max_output=np.max(all_agent_output) ##find the maximum output across all agents, to be scaled for later
 
             min_output=np.min(all_agent_output)
 
-            print("max_output")
+      #      print("max_output")
 
-            print(max_output)
+       #     print(max_output)
             
             ##and then scale the agent output so it is between 0 and 1
             
             all_agent_output_scaled=(all_agent_output-min_output)/(max_output-min_output)
 
-            print("All agent output scaled")
+        #    print("All agent output scaled")
             
-            print(all_agent_output_scaled)
+         #   print(all_agent_output_scaled)
+
+            ##initialise the output plot
+
+            fig, ax = plt.subplots()
 
             ##generate a scatter for all agents locations
 
@@ -1023,9 +960,9 @@ def server(input, output, session):
             
             current_agent_locations[:,3]=all_agent_types
 
-            print("Current agent locations")
+          #  print("Current agent locations")
 
-            print(current_agent_locations)
+           # print(current_agent_locations)
             
             z=current_agent_locations[:,2]#.astype(int) ##and the value of the output of interest
 
@@ -1053,16 +990,13 @@ def server(input, output, session):
 
             print(colour_matrix)
 
-            ##initialise the output plot
-
-            fig, ax = plt.subplots()
 
     #        scat=ax.scatter(all_agents[0].agent_info[0,0], all_agents[0].agent_info[0,1], c=[[current_agent_locations[0,2],0,0,1]], s=30) ##plot the initial scatter plot
 
             scat=ax.scatter(current_agent_locations[:,0], current_agent_locations[:,1], c=colour_matrix, s=30) ##plot the initial scatter plot
 
             #########################################
-            
+           
             if map_type=="grid":
             
                 ##grid walls
@@ -1075,14 +1009,14 @@ def server(input, output, session):
 
                     ax.plot([-0.5,floor_width+1.5],[sel_grid-0.5,sel_grid-0.5],color='k',linewidth=2)
             
-            ##########
+                ##########
 
                 ax.set(xlim=[-0.5, floor_length-0.5], ylim=[-0.5, floor_width-0.5])
 
-            if map_type=="school":        
-            
-                ##plot the school map
+            if map_type=="school":
 
+                ##########################
+                
                 ##plot the ground floor
 
                 initial_floor_wall=0
@@ -1093,27 +1027,27 @@ def server(input, output, session):
 
                 ##lower classroom wall
                     
-                ax.plot([initial_floor_wall-0.5,initial_floor_wall+floor_width-0.5],[0.5,0.5],color='k',linewidth=2)
+                ax.plot([initial_floor_wall-1.5,initial_floor_wall+floor_width-0.5],[classroom_size-0.5,classroom_size-0.5],color='k',linewidth=2)
 
                 ##upper classroom wall
                     
-                ax.plot([initial_floor_wall-0.5,initial_floor_wall+floor_width-0.5],[floor_length-1.5,floor_length-1.5],color='k',linewidth=2)
+                ax.plot([initial_floor_wall-1.5,initial_floor_wall+floor_width-0.5],[floor_length-classroom_size-0.5,floor_length-classroom_size-0.5],color='k',linewidth=2)
 
                 ##classroom walls
 
-                for sel_grid in np.arange(initial_floor_wall,initial_floor_wall+floor_width+1):
+                for sel_classroom in np.arange(no_classrooms_per_corridor+1):
 
-                    ax.plot([sel_grid-0.5,sel_grid-0.5],[-0.5,0.5],color='k',linewidth=2)
+                    ax.plot([sel_classroom*(classroom_size+1)-1.5,sel_classroom*(classroom_size+1)-1.5],[-0.5,classroom_size-0.5],color='k',linewidth=2)
                     
-                    ax.plot([sel_grid-0.5,sel_grid-0.5],[floor_length-1.5,floor_length-0.5],color='k',linewidth=2)
+                    ax.plot([sel_classroom*(classroom_size+1)-1.5,sel_classroom*(classroom_size+1)-1.5],[floor_length-classroom_size-0.5,floor_length-0.5],color='k',linewidth=2)
                 
                 ##left top corridor wall
                     
-                ax.plot([initial_floor_wall-0.5,left_wall-1.5],[floor_length-3.5,floor_length-3.5],color='k',linewidth=2)
+                ax.plot([initial_floor_wall-1,left_wall-1.5],[floor_length-3.5,floor_length-3.5],color='k',linewidth=2)
                 
                 ##left bottom corridor wall
                 
-                ax.plot([initial_floor_wall-0.5,left_wall-1.5],[2.5,2.5],color='k',linewidth=2)
+                ax.plot([initial_floor_wall-1,left_wall-1.5],[2.5,2.5],color='k',linewidth=2)
 
                 ##right top corridor wall
 
@@ -1143,19 +1077,20 @@ def server(input, output, session):
 
                 ##lower classroom wall
                     
-                ax.plot([initial_floor_wall-0.5,initial_floor_wall+floor_width-0.5],[0.5,0.5],color='k',linewidth=2)
+                ax.plot([initial_floor_wall-0.5,initial_floor_wall+floor_width-0.5],[classroom_size-0.5,classroom_size-0.5],color='k',linewidth=2)
 
                 ##upper classroom wall
                     
-                ax.plot([initial_floor_wall-0.5,initial_floor_wall+floor_width-0.5],[floor_length-1.5,floor_length-1.5],color='k',linewidth=2)
+                ax.plot([initial_floor_wall-0.5,initial_floor_wall+floor_width-0.5],[floor_length-classroom_size-0.5,floor_length-classroom_size-0.5],color='k',linewidth=2)
 
                 ##classroom walls
+                
+                for sel_classroom in np.arange(no_classrooms_per_corridor+1):
 
-                for sel_grid in np.arange(initial_floor_wall,initial_floor_wall+floor_width+1):
-
-                    ax.plot([sel_grid-0.5,sel_grid-0.5],[-0.5,0.5],color='k',linewidth=2)
+                    ax.plot([floor_width+stair_case_width+sel_classroom*(classroom_size+1)-1.5, floor_width+stair_case_width+sel_classroom*(classroom_size+1)-1.5],[-0.5,classroom_size-0.5],color='k',linewidth=2)
                     
-                    ax.plot([sel_grid-0.5,sel_grid-0.5],[floor_length-1.5,floor_length-0.5],color='k',linewidth=2)
+                    ax.plot([floor_width+stair_case_width+sel_classroom*(classroom_size+1)-1.5, floor_width+stair_case_width+sel_classroom*(classroom_size+1)-1.5],[floor_length-classroom_size-0.5,floor_length-0.5],color='k',linewidth=2)
+
                 
                 ##left top corridor wall
                     
@@ -1191,7 +1126,7 @@ def server(input, output, session):
                 
                 ##top staircase upper wall
                 
-                ax.plot([staircase_beginning-0.5,staircase_end-0.5],[floor_length-1.5,floor_length-1.5],color='k',linewidth=2)
+                ax.plot([staircase_beginning-0.5,staircase_end-0.5],[floor_length-classroom_size-0.5,floor_length-classroom_size-0.5],color='k',linewidth=2)
                 
                 ##top staircase lower wall
                 
@@ -1203,274 +1138,274 @@ def server(input, output, session):
                 
                 ##bottom staircase lower wall
                 
-                ax.plot([staircase_beginning-0.5,staircase_end-0.5],[0.5,0.5],color='k',linewidth=2)
+                ax.plot([staircase_beginning-0.5,staircase_end-0.5],[classroom_size-0.5,classroom_size-0.5],color='k',linewidth=2)
                 
                 ##and add some stairs
 
                 for sel_grid in np.arange(staircase_beginning+0.5,staircase_end,0.25):
 
-                    ax.plot([sel_grid-0.5,sel_grid-0.5],[0.5,2.5],color='k',linewidth=2)
+                    ax.plot([sel_grid-0.5,sel_grid-0.5],[classroom_size-0.5,2.5],color='k',linewidth=2)
                     
-                    ax.plot([sel_grid-0.5,sel_grid-0.5],[floor_length-3.5,floor_length-1.5],color='k',linewidth=2)
+                    ax.plot([sel_grid-0.5,sel_grid-0.5],[floor_length-3.5,floor_length-classroom_size-0.5],color='k',linewidth=2)
                 
                 ##########
 
-                ax.set(xlim=[-0.5, floor_width*2+stair_case_width-0.5], ylim=[-0.5, floor_length-0.5])
+    #            ax.set(xlim=[-1.5, floor_width*2+stair_case_width+0.5], ylim=[-1.5, floor_length+0.5])
             
-            ##and animate the output
-            
-            plt.title(f"Map of the school at time point {sel_time_step}", fontsize=20)
-
-            plt.xticks([])
-            plt.yticks([])
-            
-            
-        if plot_type=="Heat":
-        
-            no_agents=len(all_agents) ##find the number of agents
-
-            no_time_steps=len(all_agents[0].agent_info[:,0]) ##and the number of time steps
-
-            all_agent_output=np.zeros([no_time_steps,no_agents]) ##initialise agent output for all agents
-
-            all_agent_types=np.zeros(no_agents) ##and record their types
-
-            for sel_agent in np.arange(no_agents): ##for each agent, assign the specific output to the output array
-
-                all_agent_output[:,sel_agent]=all_agents[sel_agent].agent_info[:,selected_output]
+                ##and animate the output
                 
-                all_agent_types[sel_agent]=all_agents[sel_agent].agent_info[0,2] ##and the types
+                plt.title(f"Map of the school at time point {sel_time_step}", fontsize=20)
+
+                plt.xticks([])
+                plt.yticks([])
                 
-            print("All agent output")
-            
-            print(all_agent_output)
                 
-            max_output=np.max(all_agent_output) ##find the maximum output across all agents, to be scaled for later
-
-            min_output=np.min(all_agent_output)
-
-            print("max_output")
-
-            print(max_output)
+            if plot_type=="Heat":
             
-            ##and then scale the agent output so it is between 0 and 1
-            
-            all_agent_output_scaled=(all_agent_output-min_output)/(max_output-min_output)
+                no_agents=len(all_agents) ##find the number of agents
 
-            print("All agent output scaled")
-            
-            print(all_agent_output_scaled)
+                no_time_steps=len(all_agents[0].agent_info[:,0]) ##and the number of time steps
 
-            ##initialise the output plot
+                all_agent_output=np.zeros([no_time_steps,no_agents]) ##initialise agent output for all agents
 
-            fig, ax = plt.subplots()
+                all_agent_types=np.zeros(no_agents) ##and record their types
 
-            ##generate a scatter for all agents locations
+                for sel_agent in np.arange(no_agents): ##for each agent, assign the specific output to the output array
 
-            current_agent_locations=np.zeros([no_agents,4]) ##initialise the agent information array for this time step
-
-            poss_colours=np.array(['b','r']) ##initialise the possible colours
-            
-            for sel_time_step in np.arange(no_time_steps):
-            
-                for sel_agent in np.arange(no_agents):
-
-                    current_agent_locations[sel_agent,[0,1]]=all_agents[sel_agent].agent_info[sel_time_step,[0,1]]
-
-                current_agent_locations[:,2]=all_agent_output_scaled[sel_time_step,:]
-                
-                current_agent_locations[:,3]=all_agent_types
-
-                print("Current agent locations")
-
-                print(current_agent_locations)
-                
-                z=current_agent_locations[:,2]#.astype(int) ##and the value of the output of interest
-
-                ##create a matrix to generate a colour of each agent
-
-                colour_matrix=np.zeros([no_agents,4]) 
-
-                reds=z
-
-                blues=1-z
-
-                greens=current_agent_locations[:,3]/2
-
-                alpha=np.ones(no_agents)
-
-                colour_matrix[:,0]=reds
-
-                colour_matrix[:,1]=greens
-
-                colour_matrix[:,2]=blues
-
-                colour_matrix[:,3]=alpha
-
-                print("colours")
-
-                print(colour_matrix)
-
-
-        #        scat=ax.scatter(all_agents[0].agent_info[0,0], all_agents[0].agent_info[0,1], c=[[current_agent_locations[0,2],0,0,1]], s=30) ##plot the initial scatter plot
-
-                scat=ax.scatter(current_agent_locations[:,0], current_agent_locations[:,1], c=colour_matrix, s=10) ##plot the initial scatter plot
-
-            #########################################
-            
-            if map_type=="grid":
-            
-                ##grid walls
-
-                for sel_grid in np.arange(floor_width+1):
-
-                    ax.plot([sel_grid-0.5,sel_grid-0.5],[-0.5,floor_length+1.5],color='k',linewidth=2)
+                    all_agent_output[:,sel_agent]=all_agents[sel_agent].agent_info[:,selected_output]
                     
-                for sel_grid in np.arange(floor_length+2):
-
-                    ax.plot([-0.5,floor_width+1.5],[sel_grid-0.5,sel_grid-0.5],color='k',linewidth=2)
-            
-            ##########
-
-                ax.set(xlim=[-0.5, floor_length-0.5], ylim=[-0.5, floor_width-0.5])
-
-            if map_type=="school":        
-            
-                ##plot the school map
-
-                ##plot the ground floor
-
-                initial_floor_wall=0
-
-                left_wall=initial_floor_wall+np.round(floor_width/2)-np.round(corridor_width/2)
-
-                right_wall=initial_floor_wall+np.round(floor_width/2)+np.floor(corridor_width/2)+1
-
-                ##lower classroom wall
+                    all_agent_types[sel_agent]=all_agents[sel_agent].agent_info[0,2] ##and the types
                     
-                ax.plot([initial_floor_wall-0.5,initial_floor_wall+floor_width-0.5],[0.5,0.5],color='k',linewidth=2)
-
-                ##upper classroom wall
+                print("All agent output")
+                
+                print(all_agent_output)
                     
-                ax.plot([initial_floor_wall-0.5,initial_floor_wall+floor_width-0.5],[floor_length-1.5,floor_length-1.5],color='k',linewidth=2)
+                max_output=np.max(all_agent_output) ##find the maximum output across all agents, to be scaled for later
 
-                ##classroom walls
+                min_output=np.min(all_agent_output)
 
-                for sel_grid in np.arange(initial_floor_wall,initial_floor_wall+floor_width+1):
+                print("max_output")
 
-                    ax.plot([sel_grid-0.5,sel_grid-0.5],[-0.5,0.5],color='k',linewidth=2)
+                print(max_output)
+                
+                ##and then scale the agent output so it is between 0 and 1
+                
+                all_agent_output_scaled=(all_agent_output-min_output)/(max_output-min_output)
+
+                print("All agent output scaled")
+                
+                print(all_agent_output_scaled)
+
+                ##initialise the output plot
+
+                fig, ax = plt.subplots()
+
+                ##generate a scatter for all agents locations
+
+                current_agent_locations=np.zeros([no_agents,4]) ##initialise the agent information array for this time step
+
+                poss_colours=np.array(['b','r']) ##initialise the possible colours
+                
+                for sel_time_step in np.arange(no_time_steps):
+                
+                    for sel_agent in np.arange(no_agents):
+
+                        current_agent_locations[sel_agent,[0,1]]=all_agents[sel_agent].agent_info[sel_time_step,[0,1]]
+
+                    current_agent_locations[:,2]=all_agent_output_scaled[sel_time_step,:]
                     
-                    ax.plot([sel_grid-0.5,sel_grid-0.5],[floor_length-1.5,floor_length-0.5],color='k',linewidth=2)
-                
-                ##left top corridor wall
+                    current_agent_locations[:,3]=all_agent_types
+
+                    print("Current agent locations")
+
+                    print(current_agent_locations)
                     
-                ax.plot([initial_floor_wall-0.5,left_wall-1.5],[floor_length-3.5,floor_length-3.5],color='k',linewidth=2)
-                
-                ##left bottom corridor wall
-                
-                ax.plot([initial_floor_wall-0.5,left_wall-1.5],[2.5,2.5],color='k',linewidth=2)
+                    z=current_agent_locations[:,2]#.astype(int) ##and the value of the output of interest
 
-                ##right top corridor wall
+                    ##create a matrix to generate a colour of each agent
 
-                ax.plot([right_wall,initial_floor_wall+floor_width-0.5],[floor_length-3.5,floor_length-3.5],color='k',linewidth=2)
-                
-                ##right bottom corridor wall
+                    colour_matrix=np.zeros([no_agents,4]) 
 
-                ax.plot([right_wall,initial_floor_wall+floor_width-0.5],[2.5,2.5],color='k',linewidth=2)
+                    reds=z
 
-                ##corridor right wall
+                    blues=1-z
 
-                ax.plot([right_wall,right_wall],[2.5,floor_length-3.5],color='k',linewidth=2)
-                
-                ##corridor left wall
+                    greens=current_agent_locations[:,3]/2
 
-                ax.plot([left_wall-1.5,left_wall-1.5],[2.5,floor_length-3.5],color='k',linewidth=2)
-                
-                ##########################
-                
-                ##plot the upper floor
+                    alpha=np.ones(no_agents)
 
-                initial_floor_wall=floor_width+stair_case_width
+                    colour_matrix[:,0]=reds
 
-                left_wall=initial_floor_wall+np.round(floor_width/2)-np.round(corridor_width/2)
+                    colour_matrix[:,1]=greens
 
-                right_wall=initial_floor_wall+np.round(floor_width/2)+np.floor(corridor_width/2)+1
+                    colour_matrix[:,2]=blues
 
-                ##lower classroom wall
-                    
-                ax.plot([initial_floor_wall-0.5,initial_floor_wall+floor_width-0.5],[0.5,0.5],color='k',linewidth=2)
+                    colour_matrix[:,3]=alpha
 
-                ##upper classroom wall
-                    
-                ax.plot([initial_floor_wall-0.5,initial_floor_wall+floor_width-0.5],[floor_length-1.5,floor_length-1.5],color='k',linewidth=2)
+                    print("colours")
 
-                ##classroom walls
+                    print(colour_matrix)
 
-                for sel_grid in np.arange(initial_floor_wall,initial_floor_wall+floor_width+1):
 
-                    ax.plot([sel_grid-0.5,sel_grid-0.5],[-0.5,0.5],color='k',linewidth=2)
-                    
-                    ax.plot([sel_grid-0.5,sel_grid-0.5],[floor_length-1.5,floor_length-0.5],color='k',linewidth=2)
-                
-                ##left top corridor wall
-                    
-                ax.plot([initial_floor_wall-0.5,left_wall-1.5],[floor_length-3.5,floor_length-3.5],color='k',linewidth=2)
-                
-                ##left bottom corridor wall
-                
-                ax.plot([initial_floor_wall-0.5,left_wall-1.5],[2.5,2.5],color='k',linewidth=2)
+            #        scat=ax.scatter(all_agents[0].agent_info[0,0], all_agents[0].agent_info[0,1], c=[[current_agent_locations[0,2],0,0,1]], s=30) ##plot the initial scatter plot
 
-                ##right top corridor wall
+                    scat=ax.scatter(current_agent_locations[:,0], current_agent_locations[:,1], c=colour_matrix, s=10) ##plot the initial scatter plot
 
-                ax.plot([right_wall,initial_floor_wall+floor_width-0.5],[floor_length-3.5,floor_length-3.5],color='k',linewidth=2)
+                #########################################
                 
-                ##right bottom corridor wall
+                if map_type=="grid":
+                
+                    ##grid walls
 
-                ax.plot([right_wall,initial_floor_wall+floor_width-0.5],[2.5,2.5],color='k',linewidth=2)
+                    for sel_grid in np.arange(floor_width+1):
 
-                ##corridor right wall
+                        ax.plot([sel_grid-0.5,sel_grid-0.5],[-0.5,floor_length+1.5],color='k',linewidth=2)
+                        
+                    for sel_grid in np.arange(floor_length+2):
 
-                ax.plot([right_wall,right_wall],[2.5,floor_length-3.5],color='k',linewidth=2)
-                
-                ##corridor left wall
-
-                ax.plot([left_wall-1.5,left_wall-1.5],[2.5,floor_length-3.5],color='k',linewidth=2)
-                
-                ##########
-                
-                ##plot the staircase
-                
-                staircase_beginning=floor_width
-                
-                staircase_end=staircase_beginning+stair_case_width
-                
-                ##top staircase upper wall
-                
-                ax.plot([staircase_beginning-0.5,staircase_end-0.5],[floor_length-1.5,floor_length-1.5],color='k',linewidth=2)
-                
-                ##top staircase lower wall
-                
-                ax.plot([staircase_beginning-0.5,staircase_end-0.5],[floor_length-3.5,floor_length-3.5],color='k',linewidth=2)
-                
-                ##bottom staircase upper wall
-                
-                ax.plot([staircase_beginning-0.5,staircase_end-0.5],[2.5,2.5],color='k',linewidth=2)
-                
-                ##bottom staircase lower wall
-                
-                ax.plot([staircase_beginning-0.5,staircase_end-0.5],[0.5,0.5],color='k',linewidth=2)
-                
-                ##and add some stairs
-
-                for sel_grid in np.arange(staircase_beginning+0.5,staircase_end,0.25):
-
-                    ax.plot([sel_grid-0.5,sel_grid-0.5],[0.5,2.5],color='k',linewidth=2)
-                    
-                    ax.plot([sel_grid-0.5,sel_grid-0.5],[floor_length-3.5,floor_length-1.5],color='k',linewidth=2)
+                        ax.plot([-0.5,floor_width+1.5],[sel_grid-0.5,sel_grid-0.5],color='k',linewidth=2)
                 
                 ##########
 
-                ax.set(xlim=[-0.5, floor_width*2+stair_case_width-0.5], ylim=[-0.5, floor_length-0.5])
+                    ax.set(xlim=[-0.5, floor_length-0.5], ylim=[-0.5, floor_width-0.5])
+
+                if map_type=="school":        
+                
+                    ##plot the school map
+
+                    ##plot the ground floor
+
+                    initial_floor_wall=0
+
+                    left_wall=initial_floor_wall+np.round(floor_width/2)-np.round(corridor_width/2)
+
+                    right_wall=initial_floor_wall+np.round(floor_width/2)+np.floor(corridor_width/2)+1
+
+                    ##lower classroom wall
+                        
+                    ax.plot([initial_floor_wall-0.5,initial_floor_wall+floor_width-0.5],[0.5,0.5],color='k',linewidth=2)
+
+                    ##upper classroom wall
+                        
+                    ax.plot([initial_floor_wall-0.5,initial_floor_wall+floor_width-0.5],[floor_length-1.5,floor_length-1.5],color='k',linewidth=2)
+
+                    ##classroom walls
+
+                    for sel_grid in np.arange(initial_floor_wall,initial_floor_wall+floor_width+1):
+
+                        ax.plot([sel_grid-0.5,sel_grid-0.5],[-0.5,0.5],color='k',linewidth=2)
+                        
+                        ax.plot([sel_grid-0.5,sel_grid-0.5],[floor_length-1.5,floor_length-0.5],color='k',linewidth=2)
+                    
+                    ##left top corridor wall
+                        
+                    ax.plot([initial_floor_wall-0.5,left_wall-1.5],[floor_length-3.5,floor_length-3.5],color='k',linewidth=2)
+                    
+                    ##left bottom corridor wall
+                    
+                    ax.plot([initial_floor_wall-0.5,left_wall-1.5],[2.5,2.5],color='k',linewidth=2)
+
+                    ##right top corridor wall
+
+                    ax.plot([right_wall,initial_floor_wall+floor_width-0.5],[floor_length-3.5,floor_length-3.5],color='k',linewidth=2)
+                    
+                    ##right bottom corridor wall
+
+                    ax.plot([right_wall,initial_floor_wall+floor_width-0.5],[2.5,2.5],color='k',linewidth=2)
+
+                    ##corridor right wall
+
+                    ax.plot([right_wall,right_wall],[2.5,floor_length-3.5],color='k',linewidth=2)
+                    
+                    ##corridor left wall
+
+                    ax.plot([left_wall-1.5,left_wall-1.5],[2.5,floor_length-3.5],color='k',linewidth=2)
+                    
+                    ##########################
+                    
+                    ##plot the upper floor
+
+                    initial_floor_wall=floor_width+stair_case_width
+
+                    left_wall=initial_floor_wall+np.round(floor_width/2)-np.round(corridor_width/2)
+
+                    right_wall=initial_floor_wall+np.round(floor_width/2)+np.floor(corridor_width/2)+1
+
+                    ##lower classroom wall
+                        
+                    ax.plot([initial_floor_wall-0.5,initial_floor_wall+floor_width-0.5],[0.5,0.5],color='k',linewidth=2)
+
+                    ##upper classroom wall
+                        
+                    ax.plot([initial_floor_wall-0.5,initial_floor_wall+floor_width-0.5],[floor_length-1.5,floor_length-1.5],color='k',linewidth=2)
+
+                    ##classroom walls
+
+                    for sel_grid in np.arange(initial_floor_wall,initial_floor_wall+floor_width+1):
+
+                        ax.plot([sel_grid-0.5,sel_grid-0.5],[-0.5,0.5],color='k',linewidth=2)
+                        
+                        ax.plot([sel_grid-0.5,sel_grid-0.5],[floor_length-1.5,floor_length-0.5],color='k',linewidth=2)
+                    
+                    ##left top corridor wall
+                        
+                    ax.plot([initial_floor_wall-0.5,left_wall-1.5],[floor_length-3.5,floor_length-3.5],color='k',linewidth=2)
+                    
+                    ##left bottom corridor wall
+                    
+                    ax.plot([initial_floor_wall-0.5,left_wall-1.5],[2.5,2.5],color='k',linewidth=2)
+
+                    ##right top corridor wall
+
+                    ax.plot([right_wall,initial_floor_wall+floor_width-0.5],[floor_length-3.5,floor_length-3.5],color='k',linewidth=2)
+                    
+                    ##right bottom corridor wall
+
+                    ax.plot([right_wall,initial_floor_wall+floor_width-0.5],[2.5,2.5],color='k',linewidth=2)
+
+                    ##corridor right wall
+
+                    ax.plot([right_wall,right_wall],[2.5,floor_length-3.5],color='k',linewidth=2)
+                    
+                    ##corridor left wall
+
+                    ax.plot([left_wall-1.5,left_wall-1.5],[2.5,floor_length-3.5],color='k',linewidth=2)
+                    
+                    ##########
+                    
+                    ##plot the staircase
+                    
+                    staircase_beginning=floor_width
+                    
+                    staircase_end=staircase_beginning+stair_case_width
+                    
+                    ##top staircase upper wall
+                    
+                    ax.plot([staircase_beginning-0.5,staircase_end-0.5],[floor_length-1.5,floor_length-1.5],color='k',linewidth=2)
+                    
+                    ##top staircase lower wall
+                    
+                    ax.plot([staircase_beginning-0.5,staircase_end-0.5],[floor_length-3.5,floor_length-3.5],color='k',linewidth=2)
+                    
+                    ##bottom staircase upper wall
+                    
+                    ax.plot([staircase_beginning-0.5,staircase_end-0.5],[2.5,2.5],color='k',linewidth=2)
+                    
+                    ##bottom staircase lower wall
+                    
+                    ax.plot([staircase_beginning-0.5,staircase_end-0.5],[0.5,0.5],color='k',linewidth=2)
+                    
+                    ##and add some stairs
+
+                    for sel_grid in np.arange(staircase_beginning+0.5,staircase_end,0.25):
+
+                        ax.plot([sel_grid-0.5,sel_grid-0.5],[0.5,2.5],color='k',linewidth=2)
+                        
+                        ax.plot([sel_grid-0.5,sel_grid-0.5],[floor_length-3.5,floor_length-1.5],color='k',linewidth=2)
+                    
+                    ##########
+
+                    ax.set(xlim=[-0.5, floor_width*2+stair_case_width-0.5], ylim=[-0.5, floor_length-0.5])
             
             ##and animate the output
 

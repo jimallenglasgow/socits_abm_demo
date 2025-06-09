@@ -32,14 +32,14 @@ class Location():
 
     ##the function to initialise all the values in the location
 
-    def __init__(self, sel_location, floor_width, floor_length, no_time_steps):
+    def __init__(self, sel_location, coords, no_time_steps):
 
         self.location_id=sel_location
-        row=int(sel_location/floor_width)
-        col=np.mod(sel_location,floor_width)
+#        row=int(sel_location/floor_length)
+ #       col=np.mod(sel_location, floor_width)
         self.allowed_initial_location=0
         self.possible_location=0
-        self.coords=[row,col]
+        self.coords=coords
         self.no_agents_present=0
         self.agents_in_location=0
         self.locations_to_move_to=0
@@ -47,14 +47,16 @@ class Location():
         self.is_toilet=0
         self.is_staff_room=0
         self.is_canteen=0
+        self.is_corridor=0
         self.classroom_year=0
+        self.room_id=-1
         
         ##initialise the measures in each location
         
         self.mean_location_stress=0
         self.mean_location_loneliness=0
         
-        self.location_info=np.zeros([no_time_steps,2])
+        self.location_info=np.zeros([int(no_time_steps),2])
 
     ############################################################
 
@@ -96,8 +98,12 @@ class Location():
         location_id=self.location_id
 
         self.is_classroom=0
-
+        
+        print("location_id = ",location_id)
+        
         poss_location=self.possible_location
+        
+        print("poss_location = ",poss_location)
         
         ##assign the selected rooms
         
@@ -150,8 +156,111 @@ class Location():
             loc_tmp=selected_staffroom
                
             if location_id==loc_tmp:
+                
+                print("Is staffroom")
                
                 self.is_staff_room=1
+                
+                
+                
+    ############################################################
+
+    ##the function to allocate the room type
+    
+    def Location_Type(self, class_id_map, poss_classrooms, non_classrooms):
+
+        location_id=self.location_id
+
+        x_coord=self.coords[0]
+        y_coord=self.coords[1]
+        
+        ##assign the selected rooms
+        
+        selected_toilets=non_classrooms[0:2]
+    
+#        print("selected_toilets")
+        
+ #       print(selected_toilets)
+    
+        ##select a canteen
+        
+        selected_canteen=np.array([non_classrooms[2]]).astype(int)
+            
+ #       print("selected_canteen")
+        
+ #       print(selected_canteen)
+            
+        ##select a staff-room
+        
+        selected_staffroom=np.array([non_classrooms[3]]).astype(int)
+        
+#        print("selected_staffroom")
+        
+ #       print(selected_staffroom)
+     
+        ##assign each classroom a year
+        
+        classroom_years=np.random.randint(2, size=(len(poss_classrooms)+len(non_classrooms)))+1
+
+        ##if the location is a possible location, then what kind of location is it?
+        
+        map_tmp=class_id_map[x_coord, y_coord]
+        
+        self.room_id=map_tmp
+        
+        self.possible_location=0
+        
+        if map_tmp==-1:
+            
+            self.is_corridor=1
+            
+            self.possible_location=1
+            
+        if map_tmp>0:
+            
+            for sel_classroom in poss_classrooms:
+                
+                if map_tmp==sel_classroom:
+                    
+                    self.is_classroom=1
+                    
+                    self.classroom_year=classroom_years[int(sel_classroom)-1]
+                    
+                    self.possible_location=1
+                
+            for sel_toilet in selected_toilets:
+                
+                if map_tmp==sel_toilet:
+                    
+                    self.is_toilet=1
+                    
+                    self.possible_location=1
+    
+            for sel_canteen in selected_canteen:
+                
+                if map_tmp==sel_canteen:
+                    
+                    self.is_canteen=1
+                    
+                    self.possible_location=1
+                    
+            for sel_staffroom in selected_staffroom:
+                
+                if map_tmp==sel_staffroom:
+                    
+                    #print("IS STAFFROOM")
+                    
+                    #print(location_id)
+                    
+                    self.is_staff_room=1
+                    
+                    self.possible_location=1
+                    
+#        print("Self staffroom? = ",self.is_staffroom)
+        
+        
+        
+        
                    
             
             
@@ -260,17 +369,22 @@ class Location():
     
     ##Sets the output to 1 if the location is an allowed initial condition.
 
-    def Allowed_Initial_Condition_Class(self,grid_size):
+    def Allowed_Initial_Condition_Class(self):
 
-        loc_col=np.mod(self.location_id,grid_size)
-
-        if loc_col==0:
-
+        if self.is_classroom==1:
+            
             self.allowed_initial_location=1
 
-        if loc_col==grid_size-1:
 
-            self.allowed_initial_location=1
+#        loc_col=np.mod(self.location_id,grid_size)
+
+ #       if loc_col==0:
+
+  #          self.allowed_initial_location=1
+
+   #     if loc_col==grid_size-1:
+
+    #        self.allowed_initial_location=1
             
     ############################################################
             

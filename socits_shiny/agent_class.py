@@ -1,5 +1,3 @@
-##Part A: load in the libraries and functions for running the code
-
 ##libraries
 
 import random
@@ -21,6 +19,8 @@ import scipy as sp
 
 ##and the function files
 
+
+
 ########################################################
 
 ##the following code defines the agent class, and all functions included involving the agent (calculating stress etc.)
@@ -29,7 +29,7 @@ class Agent():
 
     ##this function initialises all the values for the agent
 
-    def __init__(self,agent_id, no_time_steps, age_category):
+    def __init__(self,agent_id, no_time_steps, age_category, initial_status_inputs, agent_demos, initial_stress_scale, no_teachers, use_emp_data):
 
         self.agent_id=agent_id
         
@@ -39,7 +39,18 @@ class Agent():
         
         ##initialise the age
         
-        self.age=age_category[agent_id]
+        self.age=1
+        
+        if use_emp_data==1:
+        
+            age_category=np.array(agent_demos.age)
+        
+            if agent_id>no_teachers:
+            
+                self.age=age_category[agent_id-no_teachers]
+            
+            
+        #print("age = ", self.age)
         
         ####
         
@@ -76,8 +87,28 @@ class Agent():
         self.agent_class=0
 
         self.ideal_goal_length=0
-
+        
         self.stress=0
+        
+        raw_initial_agent_stress=np.random.random()*10
+        
+        self.stress=raw_initial_agent_stress*initial_stress_scale
+        
+        if self.stress<0:
+            
+            self.stress=0
+        
+        if use_emp_data==1:
+        
+            raw_initial_agent_stress=np.array(agent_demos.Initial_Stress)
+        
+            initial_agent_stress=raw_initial_agent_stress*initial_stress_scale
+            
+            if agent_id>no_teachers:
+            
+                self.stress=initial_agent_stress[agent_id-no_teachers]
+
+        #print("initial stress = ", self.stress)
 
         self.base_stress=0
 
@@ -85,7 +116,7 @@ class Agent():
 
         self.time_stress=0
         
-        self.status=0#np.random.random()
+        self.status=np.random.normal(loc=initial_status_inputs[0], scale=initial_status_inputs[1])
         
         if self.status<0:
             
@@ -173,13 +204,19 @@ class Agent():
         
         poss_staffroom=[]
         
+  #      print(no_locations)
+        
         for sel_location in np.arange(no_locations): ##checking through each location....
+
+ #           print("Sel location = ",sel_location)
 
             available_location=all_locations[sel_location].possible_location
             
+            sel_room_id=all_locations[sel_location].room_id
+            
             if available_location==1: ##if the location is a classroom, add it to the vector
             
-                all_poss_locations=np.hstack([all_poss_locations,sel_location])
+                all_poss_locations=np.hstack([all_poss_locations,sel_room_id])
 
 
             ###
@@ -192,7 +229,7 @@ class Agent():
             
                 if agent_year==0:
                 
-                    poss_classrooms=np.hstack([poss_classrooms,sel_location])
+                    poss_classrooms=np.hstack([poss_classrooms,sel_room_id])
             
                 else:
             
@@ -200,7 +237,7 @@ class Agent():
                 
                     if room_year==agent_year:
                 
-                        poss_classrooms=np.hstack([poss_classrooms,sel_location])
+                        poss_classrooms=np.hstack([poss_classrooms,sel_room_id])
                 
             ###
                 
@@ -208,7 +245,7 @@ class Agent():
             
             if toilet_location==1: ##if the location is a classroom, add it to the vector
             
-                poss_toilets=np.hstack([poss_toilets,sel_location])
+                poss_toilets=np.hstack([poss_toilets,sel_room_id])
             
             ####
             
@@ -216,15 +253,17 @@ class Agent():
             
             if canteen_location==1: ##if the location is a classroom, add it to the vector
             
-                poss_canteen=np.hstack([poss_canteen,sel_location])
+                poss_canteen=np.hstack([poss_canteen,sel_room_id])
                 
             ####
                 
             staffroom_location=all_locations[sel_location].is_staff_room
             
             if staffroom_location==1: ##if the location is a classroom, add it to the vector
+                
+#                print("Is staffroom")
             
-                poss_staffroom=np.hstack([poss_staffroom,sel_location])
+                poss_staffroom=np.hstack([poss_staffroom,sel_room_id])
 
         self.all_classrooms=poss_classrooms ##and save the vector
         
@@ -248,8 +287,8 @@ class Agent():
         
      #   print(self.all_canteens)
         
-      #  print("self.all_staffrooms")
-       # print(self.all_staffrooms)
+#        print("self.all_staffrooms")
+ #       print(self.all_staffrooms)
         
 
     ##################################
@@ -266,13 +305,15 @@ class Agent():
     
     ##If the agent is a student, then they are randomly assigned to a classroom.  If they are a teacher, they are allocated to a classroom based on their agent ID, so that teachers are spread between classrooms.
 
-    def Initialise_Location(self,all_locations,assigned_teacher_classrooms, prob_follow_group):
+    def Initialise_Location(self, all_locations, assigned_teacher_classrooms, prob_follow_group):
 
 #        no_locations=len(all_locations)
 
         poss_initial_locations=self.all_classrooms ##the possible initial locations are classrooms
 
-        initial_location=int(np.random.permutation(poss_initial_locations)[0]) ##select one of the classrooms at random
+        initial_location_id=int(np.random.permutation(poss_initial_locations)[0]) ##select one of the classrooms at random
+        
+        initial_location=self.Select_Random_Room_Location(initial_location_id, all_locations)
         
         r=np.random.random()
 
@@ -290,9 +331,11 @@ class Agent():
         
             no_classrooms=len(assigned_teacher_classrooms) ##check the number of classrooms
         
-            classroom_id=int(np.mod(self.agent_id,no_classrooms)) ##and use the agent ID to work out which class to put the teacher in
+            classroom_id=int(np.mod(self.agent_id, no_classrooms))+1 ##and use the agent ID to work out which class to put the teacher in
             
-            initial_location=int(assigned_teacher_classrooms[classroom_id]) ##assign this as the initial location
+            initial_location=self.Select_Random_Room_Location(classroom_id, all_locations)
+            
+            #initial_location=int(assigned_teacher_classrooms[classroom_id]) ##assign this as the initial location
             
             self.goal_location=initial_location ##and also set the goal to the current location for the teachers that don't move
             
@@ -306,7 +349,7 @@ class Agent():
 
         new_agent_coords=new_agent_coords_shift+current_location_coords
 
-        #print("current_agent coords = ",new_agent_coords)
+#        print("current_agent coords = ",new_agent_coords)
 
         self.current_position=new_agent_coords
 
@@ -348,11 +391,29 @@ class Agent():
     
     ##Randomly assigns the agent a class based on the probability distribution of the classes
 
-    def Initialise_Agent_Class(self,no_classes,class_prob_dist):
+    def Initialise_Agent_Class(self, student_teacher_pars):
+        
+        agent_type=self.agent_type
+        
+        class_mean=student_teacher_pars[2]
+        
+        class_sd=student_teacher_pars[3]
+        
+        if agent_type==2:
+            
+            class_mean=student_teacher_pars[0]
+        
+            class_sd=student_teacher_pars[1]
     
-        sel_class=np.random.choice(no_classes, 1, p=class_prob_dist)
+#        sel_class=np.random.choice(no_classes, 1, p=class_prob_dist)
 
-        self.agent_class=sel_class[0]
+        sel_class=np.random.normal(loc=class_mean, scale=class_sd)
+        
+        if sel_class<0:
+            
+            sel_class=0
+            
+        self.agent_class=sel_class
         
 #        print("sel_class = ",self.agent_class)
 
@@ -419,6 +480,36 @@ class Agent():
                     self.location_stress[int(sel_location)]=sel_room_stress
                     
 
+    ###############################################################
+
+    ##function to select a location at random for the agent to move to
+
+    def Select_Random_Room_Location(self, sel_room_id, all_locations):
+        
+ #       print("sel_room_id = ", sel_room_id)
+        
+        no_locations=len(all_locations)
+        
+        poss_goal_locations=[]
+        
+        for sel_location in np.arange(no_locations):
+        
+            location_room_id=all_locations[sel_location].room_id
+            
+            if location_room_id==sel_room_id:
+                
+                poss_goal_locations=np.hstack([poss_goal_locations, sel_location])
+                
+#        print("poss_goal_locations = ",poss_goal_locations)
+        
+        sel_goal=int(np.random.permutation(poss_goal_locations)[0])
+        
+#        print("sel goal = ", sel_goal)
+        
+        return(sel_goal)
+
+
+
 
     ##################################
     
@@ -434,7 +525,7 @@ class Agent():
     
     ##When a new goal is required, the agent is assigned a new classroom to aim to travel to (note: with some probability this will be their current location).
 
-    def Set_New_Goal_Class(self, prob_teacher_moving, canteen_prob, current_lunch_time, prob_follow_group, assigned_teacher_classrooms):
+    def Set_New_Goal_Class(self, prob_teacher_moving, canteen_prob, current_lunch_time, prob_follow_group, assigned_teacher_classrooms, all_locations):
         
         old_goal=self.goal_location ##register the old goal, as for the teachers the goal may not change
         
@@ -448,7 +539,9 @@ class Agent():
             
             if agent_type!=2:
             
-                sel_goal=int(np.random.permutation(poss_goal_locations)[0]) ##select one at random
+                sel_room_id=int(np.random.permutation(poss_goal_locations)[0]) ##select one at random
+                
+                sel_goal=self.Select_Random_Room_Location(sel_room_id, all_locations)
             
             if agent_type==2:
                 
@@ -460,7 +553,9 @@ class Agent():
                 
  #               if r<prob_teacher_moving: ##...and by chance they don't move
                 
-                sel_goal=int(assigned_teacher_classrooms[classroom_id]) ##assign this as the initial location
+                sel_room_id=int(assigned_teacher_classrooms[classroom_id]) ##assign this as the initial location
+                
+                sel_goal=self.Select_Random_Room_Location(sel_room_id, all_locations)
                 
                 self.teacher_classroom=sel_goal
                 
@@ -474,13 +569,17 @@ class Agent():
             
                 if r<canteen_prob:
                     
-                    sel_goal=self.all_canteens[0]
+                    sel_room_id=self.all_canteens[0]
+                    
+                    sel_goal=self.Select_Random_Room_Location(sel_room_id, all_locations)
                     
                 else:
                     
                     poss_goal_locations=self.available_locations
                     
-                    sel_goal=int(np.random.permutation(poss_goal_locations)[0]) ##select one at random
+                    sel_room_id=int(np.random.permutation(poss_goal_locations)[0]) ##select one at random
+                    
+                    sel_goal=self.Select_Random_Room_Location(sel_room_id, all_locations)
                     
                     #print("sel_goal = ",sel_goal)
             
@@ -492,7 +591,9 @@ class Agent():
             
                 r=np.random.random()
                 
-                sel_goal=self.all_staffrooms[0]
+                sel_room_id=self.all_staffrooms[0]
+                
+                sel_goal=self.Select_Random_Room_Location(sel_room_id, all_locations)
                 
                 if r>prob_teacher_moving: ##...and by chance they don't move
                 
@@ -500,7 +601,9 @@ class Agent():
                     
                 if self.canteen_duty==1:
                     
-                    sel_goal=self.all_canteens[0]
+                    sel_room_id=self.all_canteens[0]
+                    
+                    sel_goal=self.Select_Random_Room_Location(sel_room_id, all_locations)
                     
         if agent_type!=2: ##if the agent is not a teacher....
                 
@@ -511,18 +614,24 @@ class Agent():
                 own_group=self.movement_group
                 
                 sel_goal=int(self.group_goals[own_group])
+                
+      #          print("sel group goal = ", sel_goal)
+                
+  #      print("sel room id = ",sel_room_id,", Sel goal = ", sel_goal)
 
         self.goal_location=sel_goal
         
     ##################################
         
-    def Set_New_Goal_Toilet(self):
+    def Set_New_Goal_Toilet(self, all_locations):
         
         old_goal=self.goal_location ##register the old goal, as for the teachers the goal may not change
         
         poss_goal_locations=self.all_toilets ##the goals are the toilets
 
-        sel_goal=int(np.random.permutation(poss_goal_locations)[0]) ##select one at random
+        sel_room_id=int(np.random.permutation(poss_goal_locations)[0]) ##select one at random
+        
+        sel_goal=self.Select_Random_Room_Location(sel_room_id, all_locations)
         
         self.goal_location=sel_goal
 
@@ -544,6 +653,8 @@ class Agent():
     def Ideal_Goal_Length(self,all_locations,G):
     
         current_location=self.current_location
+
+       # print()
 
         path_to_goal = nx.shortest_path(G, self.current_location, self.goal_location)
 
@@ -608,7 +719,9 @@ class Agent():
     
     ##This function assigns a random number between -1 and 1 as the initial relationship quality between the agents.
 
-    def Initialise_RQ(self, all_agents, emp_networks, initial_agent_types, no_teachers, use_emp_networks):
+    def Initialise_RQ(self, all_agents, emp_networks, initial_agent_types, no_teachers, initial_rq_inputs):
+        
+        net_size=np.size(emp_networks)
 
         no_agents=len(all_agents)
         
@@ -618,19 +731,27 @@ class Agent():
         
         sel_agent=self.agent_id
         
-        if use_emp_networks==1:
-
-            all_sel_agent_student_rq=np.array(emp_networks.iloc[:,(sel_agent-no_teachers)])
+        mean_rq=initial_rq_inputs[0]
+        
+        sd_rq=initial_rq_inputs[1]
+        
+        random_rq=np.random.normal(loc=mean_rq, scale=sd_rq, size=no_agents)
+        
+        if net_size>1 and sel_agent>(no_teachers-1):
+            
+            #print("Sel agent = ", sel_agent)
+            
+            sel_agent_student_rq=np.array(emp_networks.iloc[:, (sel_agent-no_teachers)])
 
             #no_network_students=len(all_sel_agent_student_rq)
 
             #print("No network students = ",no_network_students)
 
-            sel_agent_student_rq=all_sel_agent_student_rq[0:no_students]
+            #sel_agent_student_rq=all_sel_agent_student_rq[0:no_students]
 
             sel_agent_rq=np.zeros(no_agents)
 
-            sel_agent_rq[initial_agent_types!=2]=sel_agent_student_rq
+            sel_agent_rq[initial_agent_types!=2]=random_rq[initial_agent_types!=2]+sel_agent_student_rq
 
  #       print("sel_agent_rq")
 
@@ -640,7 +761,7 @@ class Agent():
             
         else:
             
-            self.all_rq=np.random.random(no_agents)*2-1
+            self.all_rq=random_rq
 
         self.rq=np.sum(self.all_rq)
 
@@ -903,7 +1024,7 @@ class Agent():
     
     ##If a student is negatively interacted with (and there are no teachers present), then the student's stress increases by the amount given by the parameter "increase_in_stress_due_to_neg_int", whilst if the student is positively interacted with the student's stress idecreases by the amount given by the parameter "decrease_in_stress_due_to_pos_int".
 
-    def Update_Stress_Due_To_Interactions(self,all_locations,all_agents,increase_in_stress_due_to_neg_int,decrease_in_stress_due_to_pos_int):
+    def Update_Stress_Due_To_Interactions(self, all_locations, all_agents, increase_in_stress_due_to_neg_int, decrease_in_stress_due_to_pos_int, reduction_due_to_teacher_presence):
 
         agent_type=self.agent_type
 
@@ -917,9 +1038,15 @@ class Agent():
 
             no_teachers=agent_types_here[2]
 
-            if no_teachers==0 and am_bullied==1: ##if the student is bullied, but there are no teachers increase stress
+            if am_bullied==1:
 
-                self.stress=self.stress+increase_in_stress_due_to_neg_int
+                if no_teachers>1: ##if the student is bullied, but there are no teachers increase stress
+
+                    self.stress=self.stress+increase_in_stress_due_to_neg_int*reduction_due_to_teacher_presence
+                    
+                if no_teachers==0: ##if the student is bullied, but there are no teachers increase stress
+
+                    self.stress=self.stress+increase_in_stress_due_to_neg_int
 
             am_supported=self.pos_int_rec ##check if the student was supported
 
@@ -995,7 +1122,7 @@ class Agent():
     
     ##This function decides if a teacher has a negative interaction based on class.  The focal teacher looks at all students in the same location, and selects one of the students with a lower class to negatively interact with.
 
-    def Decide_Negative_Class_Interaction(self,all_agents,all_locations):
+    def Decide_Negative_Class_Interaction(self, all_agents, all_locations, standards_interaction_scale):
 
         agent_type=self.agent_type ##check the agent type
 
@@ -1017,9 +1144,13 @@ class Agent():
 
                 class_diff=(teacher_class-other_agent_class) ##is the teacher class more strict than the student class?
                 
+                prob_of_neg_class_int=np.tanh(standards_interaction_scale*class_diff)
+                
+                r=np.random.random()
+                
 #                print("Class diff = ",class_diff)
                 
-                if class_diff>0: ##and if so add this to the list of possible agents to interact negatively with
+                if r<prob_of_neg_class_int: ##and if so add this to the list of possible agents to interact negatively with
 
                     poss_agents_to_bully.append(sel_agent)
                 
@@ -1054,7 +1185,7 @@ class Agent():
     
     ##This function decides if an agent interacts negatively with another based on the scientific perspective, and if so which other agent.  The agent first compares the status difference (moderated by relationship quality) with all others agents, and if this calculation is larger than the set threshold parameter then the other agent is added to the list of possible agents to interact negatively with.  After this, the agent selects one of the possible agents in the location to interact negatively with.  For the stress level, the agent stress is multiplied by the stress bully scale, and placed into a tanh function to change this into a probability.  The agent then selects another agent in the location to interact with negatively with the probability calculated.
 
-    def Decide_Negative_Interaction(self,all_agents,all_locations,status_threshold,stress_bully_scale):
+    def Decide_Negative_Interaction(self, all_agents, all_locations, status_threshold, stress_bully_scale):
 
         agent_type=self.agent_type ##check the agent type
 
@@ -1090,6 +1221,8 @@ class Agent():
 
                 status_diff=(other_agent_status-own_status)*rq_with_other_agent ##choose to interact negatively if have a negative rq and their status is small enough, and then compare this multiplication to the status threshold
 
+#                print("status_diff = ",status_diff)
+
                 if status_diff>status_threshold: ##if this quantity is above a threshold
 
                     poss_agents_to_bully.append(sel_agent) ##add to the possible agents to bully
@@ -1100,6 +1233,8 @@ class Agent():
             no_agents_to_bully=len(poss_agents_to_bully) 
 
             if no_agents_to_bully>0: ##if there are agents to bully
+                
+                #print("Bully")
 
                 sel_agent_to_bully=np.random.permutation(poss_agents_to_bully)[0] ##select one at random
 
@@ -1331,8 +1466,6 @@ class Agent():
         self.agent_info[time,8]=self.current_location
         
         
-
-
 
 
 

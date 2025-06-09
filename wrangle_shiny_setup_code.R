@@ -9,7 +9,7 @@ rm(list=ls())
 library(tidyverse)
 library(data.table)
 
-working_dir <- "T:/projects/SOCITS S00606/Data/AnonymisedData/Surveys"
+working_dir <- "J:/SPHSU/Projects/projects/SOCITS S00606/Data/AnonymisedData/Surveys"
 
 # Set the workspace path to the directory containing this script
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
@@ -24,9 +24,13 @@ model_input_pars<-data.table(read.csv("model_setup_pars.csv"))
 
 model_input_pars[,par_count:=0:(.N-1)]
 
-model_input_pars[,model_input_text:=paste0("model_inputs[",par_count,"]=",Set)]
+#model_input_pars[,model_input_text:=paste0("model_inputs[",par_count,"]=",Set)]
 
-model_input_pars[shiny_input=="Y", model_input_text:=paste0("model_inputs[",par_count,"]=input.", Parameter_name,"()")]
+model_input_pars[,model_input_text:=paste0(Parameter_name,"=",Set)]
+
+#model_input_pars[shiny_input=="Y", model_input_text:=paste0("model_inputs[",Parameter_name,"]=input.", Parameter_name,"()")]
+
+model_input_pars[shiny_input=="Y", reactive_input_text:=paste0(Parameter_name,"=input.", Parameter_name,"()")]
 
 model_input_pars[shiny_input=="Y", shiny_input_text:=paste0("ui.input_slider(\"", Parameter_name,"\", \"",Text,"\", ", Min,", ", Max,", ", Set,"),")]
 
@@ -35,7 +39,7 @@ model_input_pars[shiny_input=="Y" & Type=="int", shiny_input_text:=paste0("ui.in
 
 ##and save this text to a file
 
-write.csv(model_input_pars[, c("model_input_text", "shiny_input_text")], "shiny_input_text.csv", row.names = F)
+write.csv(model_input_pars[, c("model_input_text", "reactive_input_text", "shiny_input_text")], "shiny_input_text.csv", row.names = F)
 
 
 

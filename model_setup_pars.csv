@@ -1,0 +1,51 @@
+﻿Parameter_name,Set,Default,emp_values,Type,Min,Max,Text,shiny_input
+inc_science_perspective,0,0,,int,0,1,x,N
+inc_walking_perspective,1,1,,int,0,1,x,N
+inc_yais_perspective,1,1,,int,0,1,x,N
+inc_teacher_perspective,1,1,,int,0,1,x,N
+stress_decay,0.5,0.5,,float,0,1,Stress decay,Y
+status_threshold,5,5,,float,0,10,Status threshold,N
+increase_in_stress_due_to_neg_int,25,25,,float,0,50,Increase in stress due to neg int,N
+decrease_in_stress_due_to_pos_int,25,25,,float,0,50,Decrease in stress due to neg int,N
+rq_decrease_through_bullying,0.0005,0.0005,,float,0,0.001,RQ decrease_through_bullying,N
+rq_increase_through_support,0.0005,0.0005,,float,0,0.001,rq_increase_through_support,N
+crowded_threshold,0.0005,0.0005,,int,0,0.001,Crowded threshold,N
+crowded_stress,0.0005,0.0005,,float,0,0.001,Crowded stress,N
+journey_stress,0.0005,0.0005,,float,0,0.001,journey_stress,N
+stress_bully_scale,1,1,,float,0,10,Stress bully scale,N
+stress_through_class_interaction,25,25,,float,0,50,Stress through norms interaction,N
+prob_teacher_moving,0.5,0.5,,float,0,1,Prob teacher moving,N
+status_increase,0.0005,0.0005,,float,0,0.001,status_increase,N
+status_decrease,0.0005,0.0005,,float,0,0.001,status_decrease,N
+mean_time_stress,-0.995,-0.995,,float,-1,-0.99,Mean time stress,N
+mean_room_stress,-0.995,-0.995,,float,-1,-0.99,Mean room stress,N
+prob_follow_group,0.5,0.5,,float,0,1,Prob follow group,N
+teacher_standards_mean,3.005,3.005,,float,3,3.01,Teacher standards mean,N
+teacher_standards_sd,0.5,0.5,,float,0,1,Teacher standards sd,N
+student_standards_mean,2.5,2.5,,float,0,5,Student standards mean,N
+student_standards_sd,0.5,0.5,,float,0,1,Student standards sd,N
+standards_interaction_scale,1.0005,1.0005,,float,1,1.001,Standards interaction scale,N
+initial_status_mean,2.5,2.5,,float,0,5,Initial status mean,N
+initial_status_sd,5,5,,float,0,10,Initial status sd,N
+reduction_due_to_teacher_presence,0.5,0.5,,float,0,1,Reduction due to teacher presence,N
+rq_mean,0,0,,float,-2,2,RQ mean,N
+rq_sd,1,1,,float,0,2,RQ sd,N
+initial_stress_scale,1,1,,float,0,2,Initial stress scale,N
+stair_case_width,5,5,,int,0,10,stair_case_width,N
+corridor_width,2,2,,int,0,10,Corridor width,N
+classroom_size,2,2,,int,0,10,classroom_size,N
+no_classrooms_per_corridor,5,5,,int,0,10,no_classrooms_per_corridor,N
+floor_length,10,10,,int,5,25,floor_length,N
+toilets_loc_1,1,1,,int,1,1,toilets_loc_1,N
+toilets_loc_2,15,15,,int,1,1,toilets_loc_2,N
+canteen_loc,13,13,,int,1,1,canteen_loc,N
+staffroom_loc,6,6,,int,1,1,staffroom_loc,N
+no_time_steps,100,500,,int,10,1000,No. time steps,Y
+no_students,300,450,,int,10,1000,No. students,Y
+no_bullies,0,0,,int,10,10000,no_bullies,N
+no_initially_stressed_students,0,0,,int,10,10000,No. initially stressed students,N
+no_boys_in_each_age,100,100,,int,10,10000,no_boys_in_each_age,N
+no_girls_in_each_age,100,100,,int,10,10000,no_girls_in_each_age,N
+class_length,40,40,,int,1,100,class_length,N
+toilet_prob,0.002,0.002,,float,0,1,toilet_prob,N
+canteen_prob,0.5,0.5,,float,0,1,Prob. Eating in canteen,N

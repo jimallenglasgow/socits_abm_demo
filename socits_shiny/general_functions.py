@@ -27,8 +27,8 @@ import scipy as sp
 
 ##and the function files
 
-from agent_class import Agent
-from location_class import Location
+#from agent_class import Agent
+#from location_class import Location
 
 ########################################################
 
@@ -51,6 +51,10 @@ from location_class import Location
 def Generate_Location_Grid(school_map,all_locations):
 
     ##calculate the number of locations based on the school map
+    
+#    print("School map")
+    
+ #   print(school_map)
 
     grid_width=len(school_map[:,0])
     
@@ -60,7 +64,7 @@ def Generate_Location_Grid(school_map,all_locations):
 
 #    print("Grid width = ",grid_width)
     
- #   print("Grid length = ",grid_length)
+#    print("Grid length = ",grid_length)
 
     no_locations=grid_width*grid_length
 
@@ -69,6 +73,8 @@ def Generate_Location_Grid(school_map,all_locations):
     for sel_location in np.arange(no_locations): ##moving through each location
 
         location_coords=all_locations[sel_location].coords ##find the coordinates
+        
+  #      print("location_coords = ",location_coords)
 
         #		location_grid_matrix[sel_location,location_coords[0],location_coords[1]]=1
 
@@ -145,11 +151,11 @@ def Generate_Corridor(school_map,grid_width,grid_length,corridor_width):
 
 	left_wall=np.round(grid_width/2)-np.round(corridor_width/2) ##where should the left wall of the corridor be?
 
-	print("left wall = ",left_wall)
+#	print("left wall = ",left_wall)
 
 	right_wall=np.round(grid_width/2)+np.floor(corridor_width/2) ##and the right?
 
-	print("right wall = ",right_wall)
+#	print("right wall = ",right_wall)
 
 	for i in np.arange(grid_width): ##across the width
 
@@ -181,29 +187,50 @@ def Generate_Corridor(school_map,grid_width,grid_length,corridor_width):
 
 ##Adds a corridor to the school map of a certain size on the ground or upper floor of the two floor school
 
-def Generate_Floor_Corridor(school_map,grid_length,floor_width,corridor_width):
+def Generate_Floor_Corridor(school_map, grid_length, floor_width, corridor_width, classroom_size):
 
-	left_wall=np.round(floor_width/2)-np.round(corridor_width/2) ##where should the left wall of the corridor be?
+    left_wall=np.round(floor_width/2-corridor_width/2) ##where should the left wall of the corridor be?
 
-#	print("left wall = ",left_wall)
+    #	print("left wall = ",left_wall)
 
-	right_wall=np.round(floor_width/2)+np.floor(corridor_width/2) ##and the right?
+    right_wall=np.round(floor_width/2-corridor_width/2)+corridor_width-1 ##and the right?
 
-#	print("right wall = ",right_wall)
+    #	print("right wall = ",right_wall)
 
-	for i in np.arange(floor_width): ##across the floor width
+    for i in np.arange(floor_width): ##across the floor width
 
-		if i<left_wall or i>right_wall: ##if the grid point falls outside the corridor...
+        if i<left_wall or i>right_wall: ##if the grid point falls outside the corridor...
 		
 	#	if i<4 or i>5:
 
-			for j in np.arange(grid_length):
+            for j in np.arange(grid_length):
 			
-				if j>1 and j<(grid_length-2): ##...and is between the classrooms...
+                if j>classroom_size and j<(grid_length-classroom_size-1): ##...and is between the classrooms...
 			
-					school_map[i,j]=0 ##...then this is not an allowed location
+                    school_map[i,j]=0 ##...then this is not an allowed location
+                    
+    ##now add the walls into the classrooms
+    
+    for i in np.arange(floor_width): ##across the floor width
 
-	return(school_map)
+        wall_check=np.mod(i+1, classroom_size+1)
+        
+#        print("i = ",i, ", wall_check = ",wall_check)
+
+        if wall_check==0:
+		
+	#	if i<4 or i>5:
+    
+            for j in np.arange(grid_length):
+         
+                if j<classroom_size or j>(grid_length-classroom_size-1): ##...and is between the classrooms...
+                    
+#                    print("Wall")
+            
+                    school_map[i,j]=0 ##...then this is not an allowed location
+
+
+    return(school_map)
 
 
 #################################################################
@@ -220,28 +247,28 @@ def Generate_Floor_Corridor(school_map,grid_length,floor_width,corridor_width):
 
 ##Runs the function "Generate_Floor_Corridor" twice, and sticks the results together to create a map of a two floor school with a corridor on each floor, and adds a staircase between them.
 
-def Generate_Two_Floor_School(floor_width,stair_case_width,corridor_width):
+def Generate_Two_Floor_School(floor_width, stair_case_width, corridor_width, classroom_size, floor_length):
 
     grid_length=2*floor_width+stair_case_width ##set the length of the grid to be the addition of both floors and the staircase
 
-    school_map_left=np.ones([floor_width,floor_width]) ##initialise a full school map for the left hand school
+    school_map_left=np.ones([int(floor_width),int(floor_length)]) ##initialise a full school map for the left hand school
 
-    school_map_left=Generate_Floor_Corridor(school_map_left,floor_width,floor_width,corridor_width) ##and generate a map with a corridor
+    school_map_left=Generate_Floor_Corridor(school_map_left,floor_length, floor_width,corridor_width, classroom_size) ##and generate a map with a corridor
 
  #   print("school_map_left")
 
   #  print(school_map_left)
 
-    school_map_right=np.ones([floor_width,floor_width]) ##initialise a full school map for the right hand school
+    school_map_right=np.ones([floor_width,floor_length]) ##initialise a full school map for the right hand school
 
-    school_map_right=Generate_Floor_Corridor(school_map_right,floor_width,floor_width,corridor_width) ##and generate a map with a corridor
+    school_map_right=Generate_Floor_Corridor(school_map_right, floor_length, floor_width,corridor_width, classroom_size) ##and generate a map with a corridor
 
-    staircase=np.zeros([stair_case_width,floor_width]) ##initialise a staircase map
+    staircase=np.zeros([stair_case_width,floor_length]) ##initialise a staircase map
 
     for i in np.arange(stair_case_width): ##fill in the staircase
 
-        staircase[i,1]=1
-        staircase[i,floor_width-2]=1
+        staircase[i,classroom_size]=1
+        staircase[i,floor_length-classroom_size-1]=1
         
    # print("staircase")
 
@@ -250,6 +277,8 @@ def Generate_Two_Floor_School(floor_width,stair_case_width,corridor_width):
     school_map=np.vstack([school_map_left,staircase,school_map_right]) ##and add all these parts together to generate the school map
 
     return(school_map)
+    
+    
 
 #################################################################
 
@@ -342,6 +371,75 @@ def Generate_Two_Floor_School_Shut_Bottom_Floor(floor_width,stair_case_width,cor
     school_map=np.vstack([school_map_left,staircase,school_map_right]) ##and add all these parts together to generate the school map
 
     return(school_map)
+    
+#################################################################
+
+##create a function to identify the classroom locations
+
+def Classroom_IDs(school_map, floor_width, stair_case_width, no_classrooms, classroom_size):
+
+    school_map=school_map*-1
+
+    class_room_top_corner=0
+
+    class_room_count=1
+
+    y_coord=0
+
+    for i in np.arange(no_classrooms):
+        
+        x_coord=i*(classroom_size+1)
+        
+        for j in np.arange(classroom_size):
+            
+            for k in np.arange(classroom_size):
+        
+                school_map[x_coord+j, y_coord+k]=class_room_count
+        
+        
+        class_room_count=class_room_count+1
+        
+    for i in np.arange(no_classrooms):
+        
+        x_coord=i*(classroom_size+1)+floor_width+stair_case_width
+        
+        for j in np.arange(classroom_size):
+            
+            for k in np.arange(classroom_size):
+        
+                school_map[x_coord+j, y_coord+k]=class_room_count
+        
+        class_room_count=class_room_count+1
+
+    L=len(school_map[0,:])
+        
+    y_coord=L-classroom_size
+        
+    for i in np.arange(no_classrooms):
+        
+        x_coord=i*(classroom_size+1)
+        
+        for j in np.arange(classroom_size):
+            
+            for k in np.arange(classroom_size):
+        
+                school_map[x_coord+j, y_coord+k]=class_room_count
+        
+        class_room_count=class_room_count+1
+        
+    for i in np.arange(no_classrooms):
+        
+        x_coord=i*(classroom_size+1)+floor_width+stair_case_width
+        
+        for j in np.arange(classroom_size):
+            
+            for k in np.arange(classroom_size):
+        
+                school_map[x_coord+j, y_coord+k]=class_room_count
+        
+        class_room_count=class_room_count+1
+        
+    return(school_map)
 
 #################################################################
 
@@ -357,7 +455,7 @@ def Generate_Two_Floor_School_Shut_Bottom_Floor(floor_width,stair_case_width,cor
 
 ##Generates a location graph of a two floor school, depending on whether the top or bottom staircase is closed.
 
-def Update_Location_Graph(all_locations,corridors_open,floor_width,stair_case_width,corridor_width):
+def Update_Location_Graph(all_locations, corridors_open, floor_width, stair_case_width, corridor_width, classroom_size, no_classrooms, non_classrooms, floor_length, display_some_outputs):
 
     ##generate the school map
     
@@ -371,11 +469,13 @@ def Update_Location_Graph(all_locations,corridors_open,floor_width,stair_case_wi
 
     if corridors_open==0:
 
-        school_map=Generate_Two_Floor_School(floor_width,stair_case_width,corridor_width)
-
-#        print("school map")
+        school_map=Generate_Two_Floor_School(floor_width, stair_case_width, corridor_width, classroom_size, floor_length)
         
- #       print(school_map)
+        if display_some_outputs==1:
+
+            print("School map")
+            
+            print(school_map)
 
     if corridors_open==1:
 
@@ -391,53 +491,39 @@ def Update_Location_Graph(all_locations,corridors_open,floor_width,stair_case_wi
 
     ##generate the location adjacency matrix
 
-    location_grid_matrix=Generate_Location_Grid(school_map,all_locations)
+    location_grid_matrix=Generate_Location_Grid(school_map, all_locations)
         
-    #print("location_grid_matrix")
+#    print("location_grid_matrix")
 
-    #print(location_grid_matrix)
+#    print(location_grid_matrix)
 
     ##generate the points to which each individual is allowed to move, along with the classrooms
+    
+    class_id_map=Classroom_IDs(school_map, floor_width, stair_case_width, no_classrooms, classroom_size)
+    
+    ##allocate some rooms to take certain roles e.g., toilets, staff-room (you need at least 4)
+    
+    all_rooms_tmp=np.unique(class_id_map)
+
+    all_rooms=all_rooms_tmp[all_rooms_tmp>0]
+    
+    class_index=np.isin(all_rooms, non_classrooms, invert=True)#[0]
+
+    poss_classrooms=all_rooms[class_index]
+    
+    if display_some_outputs==1:
+    
+        print("Poss classrooms")
+        
+        print(poss_classrooms)
 
     for sel_location in np.arange(no_locations):
 
-        all_locations[sel_location].Is_Possible_Location(school_map)
+#        all_locations[sel_location].Is_Possible_Location(school_map)
         
-        all_locations[sel_location].Is_Classroom(floor_width)
-        
-    poss_classrooms=[]
-    
-    for sel_location in np.arange(no_locations): ##and then initialise them
-    
-        if all_locations[sel_location].is_classroom==1:
-    
-            poss_classrooms=np.hstack([poss_classrooms,sel_location])
-    
-    #################
-    
-    ##allocate some rooms to take certain roles e.g., toilets, staff-room
-    
-    ##select two classrooms to be toilets
-    
-    non_classrooms=[9, 49, 150, 189]#np.random.permutation(poss_classrooms)[0:4]
-    
-    ##and remove them from the list of possible classrooms
-    
-    non_class_index=np.isin(poss_classrooms, non_classrooms, invert=True)#[0]
-    
-#    print("non_class_index")
-    
- #   print(non_class_index)
-    
-    poss_classrooms=poss_classrooms[non_class_index]
-
-#    print("selected_toilets = ",selected_toilets)
+        all_locations[sel_location].Location_Type(class_id_map, poss_classrooms, non_classrooms)
     
     assigned_teacher_classrooms=np.random.permutation(poss_classrooms)
-    
-    print("poss_classrooms")
-    
-    print(poss_classrooms)
     
   #  print("Teacher classrooms")
     
@@ -445,14 +531,12 @@ def Update_Location_Graph(all_locations,corridors_open,floor_width,stair_case_wi
         
     for sel_location in np.arange(no_locations): ##and then initialise them
         
-        all_locations[sel_location].Allocate_Room_Type(poss_classrooms, non_classrooms)
+#        all_locations[sel_location].Allocate_Room_Type(poss_classrooms, non_classrooms)
         
         all_locations[sel_location].Calc_Locations_To_Move_To(location_grid_matrix)
 
-        all_locations[sel_location].Allowed_Initial_Condition_Class(floor_width)
+        all_locations[sel_location].Allowed_Initial_Condition_Class()
         
-        
-
     ##using this generate the graph
 
     G = nx.Graph() ##initialise the graph
@@ -466,6 +550,16 @@ def Update_Location_Graph(all_locations,corridors_open,floor_width,stair_case_wi
         for j in locations_allowed_to_move_to:
 
             G.add_edge(sel_location, j)
+            
+    ##finally, remove the nodes that are not allowed locations
+    
+    for sel_location in np.arange(no_locations):
+    
+        poss_node=all_locations[sel_location].possible_location
+        
+        if poss_node==0 and G.has_node(sel_location):
+    
+            G.remove_node(sel_location)
             
            
     return(G)
@@ -634,9 +728,11 @@ def Generate_Oblong_Graph(floor_width,floor_length,location_grid_matrix,all_loca
     
     assigned_teacher_classrooms=np.random.permutation(poss_classrooms)
     
-    print("poss_classrooms")
+    if display_some_outputs==1:
     
-    print(poss_classrooms)
+        print("poss_classrooms")
+        
+        print(poss_classrooms)
     
   #  print("Teacher classrooms")
     
@@ -791,7 +887,7 @@ def Assign_Groups(all_agents, no_groups):
 
 ##############################################################################################
 
-def Set_New_Group_Goals(no_groups, canteen_prob, current_lunch_time, all_agents, no_teachers, no_in_each_age):
+def Set_New_Group_Goals(no_groups, canteen_prob, current_lunch_time, all_agents, no_teachers, no_in_each_age, all_locations):
     
     all_group_goals=np.zeros(no_groups)
     
@@ -807,7 +903,9 @@ def Set_New_Group_Goals(no_groups, canteen_prob, current_lunch_time, all_agents,
             
             poss_goal_locations=all_agents[(older_agent+1)].all_classrooms ##the goals are the classrooms
         
-        sel_goal=int(np.random.permutation(poss_goal_locations)[0]) ##select one at random
+        sel_room_id=int(np.random.permutation(poss_goal_locations)[0]) ##select one at random
+        
+        sel_goal=Select_Random_Group_Room_Location(sel_room_id, all_locations)
 
         if current_lunch_time==1:
             
@@ -815,8 +913,9 @@ def Set_New_Group_Goals(no_groups, canteen_prob, current_lunch_time, all_agents,
         
             if r<canteen_prob:
                 
-                sel_goal=all_agents[0].all_canteens[0]
+                sel_room_id=all_agents[0].all_canteens[0]
                 
+                sel_goal=Select_Random_Group_Room_Location(sel_room_id, all_locations)
 
         all_group_goals[sel_group]=sel_goal
 
@@ -836,8 +935,27 @@ def Set_New_Group_Goals(no_groups, canteen_prob, current_lunch_time, all_agents,
 
 
 
+###############################################################
 
+##function to select a location at random for the agent to move to
 
+def Select_Random_Group_Room_Location(sel_room_id, all_locations):
+    
+    no_locations=len(all_locations)
+    
+    poss_goal_locations=[]
+    
+    for sel_location in np.arange(no_locations):
+    
+        location_room_id=all_locations[sel_location].room_id
+        
+        if location_room_id==sel_room_id:
+            
+            poss_goal_locations=np.hstack([poss_goal_locations, sel_location])
+    
+    sel_goal=np.random.permutation(poss_goal_locations)[0]
+    
+    return(sel_goal)
 
 
 

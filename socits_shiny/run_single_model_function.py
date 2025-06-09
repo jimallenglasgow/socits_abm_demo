@@ -23,7 +23,11 @@ import scipy as sp
 
 import pandas as pd
 
+import sys
+
 ##and the function files
+
+sys.path.append("../functions/") # Adds higher directory to python modules path
 
 from agent_class import Agent
 from location_class import Location
@@ -44,81 +48,147 @@ from general_functions import Set_New_Group_Goals
 
 #from plot_output_functions import Plot_Output
 
+sys.path.append("") # Adds higher directory to python modules path
+
 #######################################################################################################################################################
 
 ##function to run a single run of the model
 
-def Run_The_Model_Once(all_calibrated_inputs, all_inputs_set_through_data, all_technical_inputs):
+def Run_The_Model_Once(calibrated_par_ids, calibration_guess, model_inputs, other_inputs, use_emp_data, selected_students, all_agent_emp_inputs, full_emp_network, display_some_outputs):
+    
+    model_inputs[calibrated_par_ids]=calibration_guess
+    
+    inc_science_perspective=int(model_inputs[0])
+    inc_walking_perspective=int(model_inputs[1])
+    inc_yais_perspective=int(model_inputs[2])
+    inc_teacher_perspective=int(model_inputs[3])
+    stress_decay=model_inputs[4]
+    status_threshold=model_inputs[5]
+    increase_in_stress_due_to_neg_int=model_inputs[6]
+    decrease_in_stress_due_to_pos_int=model_inputs[7]
+    rq_decrease_through_bullying=model_inputs[8]
+    rq_increase_through_support=model_inputs[9]
+    crowded_threshold=int(model_inputs[10])
+    crowded_stress=model_inputs[11]
+    journey_stress=model_inputs[12]
+    stress_bully_scale=model_inputs[13]
+    stress_through_class_interaction=model_inputs[14]
+    prob_teacher_moving=model_inputs[15]
+    status_increase=model_inputs[16]
+    status_decrease=model_inputs[17]
+    mean_time_stress=model_inputs[18]
+    mean_room_stress=model_inputs[19]
+    prob_follow_group=model_inputs[20]
+    teacher_standards_mean=model_inputs[21]
+    teacher_standards_sd=model_inputs[22]
+    student_standards_mean=model_inputs[23]
+    student_standards_sd=model_inputs[24]
+    standards_interaction_scale=model_inputs[25]
+    initial_status_mean=model_inputs[26]
+    initial_status_sd=model_inputs[27]
+    reduction_due_to_teacher_presence=model_inputs[28]
+    rq_mean=model_inputs[29]
+    rq_sd=model_inputs[30]
+    initial_stress_scale=model_inputs[31]
+    stair_case_width=int(model_inputs[32])
+    corridor_width=int(model_inputs[33])
+    classroom_size=int(model_inputs[34])
+    no_classrooms_per_corridor=int(model_inputs[35])
+    floor_length=int(model_inputs[36])
+    toilets_loc_1=int(model_inputs[37])
+    toilets_loc_2=int(model_inputs[38])
+    canteen_loc=int(model_inputs[39])
+    staffroom_loc=int(model_inputs[40])
+    no_time_steps=int(model_inputs[41])
+    no_students=int(model_inputs[42])
+    no_bullies=int(model_inputs[43])
+    no_initially_stressed_students=int(model_inputs[44])
+    no_boys_in_each_age=int(model_inputs[45])
+    no_girls_in_each_age=int(model_inputs[46])
+    class_length=int(model_inputs[47])
+    toilet_prob=model_inputs[48]
+    canteen_prob=model_inputs[49]
     
     ##set parameters
     
-    plot_type=all_technical_inputs[0]
-    map_type=all_technical_inputs[1]
-    floor_width=all_technical_inputs[2]
-    floor_length=all_technical_inputs[3]
-    stair_case_width=all_technical_inputs[4]
-    corridor_width=all_technical_inputs[5]
-    no_time_steps=all_technical_inputs[6]
-    no_students=all_technical_inputs[7]
-    no_teachers=all_technical_inputs[8]
-    no_bullies=all_technical_inputs[9]
-    inc_science_perspective=all_technical_inputs[10]
-    inc_walking_perspective=all_technical_inputs[11]
-    inc_yais_perspective=all_technical_inputs[12]
-    inc_teacher_perspective=all_technical_inputs[13]
-    no_classes=all_technical_inputs[14]
-    
-    moving_times=all_technical_inputs[15]
-    move_with_friends=all_technical_inputs[16]
-    lunch_times=all_technical_inputs[17]
-    
-    no_groups=all_technical_inputs[18]
-    
-    class_prob_dist=all_technical_inputs[19]
-    
-    use_emp_networks=all_technical_inputs[20]
-    
-    no_initially_stressed_students=all_technical_inputs[21]
-    
-    ##parameters set by the data
-    
-    toilet_prob=all_inputs_set_through_data[0]
-    canteen_prob=all_inputs_set_through_data[1]
-    
-    ##parameters to be calibrated
-    
-    stress_decay=all_calibrated_inputs[0]
-    status_threshold=all_calibrated_inputs[1]
-    increase_in_stress_due_to_neg_int=all_calibrated_inputs[2]
-    decrease_in_stress_due_to_pos_int=all_calibrated_inputs[3]
-    rq_decrease_through_bullying=all_calibrated_inputs[4]
-    rq_increase_through_support=all_calibrated_inputs[5]
-    
-    crowded_threshold=all_calibrated_inputs[6]
-    crowded_stress=all_calibrated_inputs[7]
-    journey_stress=all_calibrated_inputs[8]
-    stress_bully_scale=all_calibrated_inputs[9]
-    
-    stress_through_class_interaction=all_calibrated_inputs[10]
-    prob_teacher_moving=all_calibrated_inputs[11]
-    status_increase=all_calibrated_inputs[12]
-    status_decrease=all_calibrated_inputs[13]
-    
-    mean_time_stress=all_calibrated_inputs[14]
-    mean_room_stress=all_calibrated_inputs[15]
-    
-    prob_follow_group=all_calibrated_inputs[16]
-    
+    plot_type=other_inputs[0]
+    map_type=other_inputs[1]
+        
     #############
+
+    ##generate other required parameters
     
-    ##load in the empirical networks
+    no_teachers=(no_classrooms_per_corridor-1)*4+2
+
+    no_age_groups=1#len(no_boys_in_each_age)
+
+    no_agents=no_students+no_teachers
+
+    no_groups=int(no_students/4)
+
+    moving_times=np.arange(10, no_time_steps, class_length).astype(int)#[5, 25, 50, 75]
     
+    lunch_time_ids=np.zeros(2)
+    
+    lunch_times=np.zeros(len(moving_times))#[0, 0, 0, 0]
+    
+    if no_time_steps>(class_length+10):
+    
+        lunch_1=int(len(moving_times)/2)
+        lunch_2=int(len(moving_times)/2)+1
+    
+        lunch_time_ids[0]=lunch_1
+        lunch_time_ids[1]=lunch_2    
+
+        lunch_times[int(lunch_time_ids[0])]=1
+        
+        if lunch_2<len(moving_times):
+        
+            lunch_times[int(lunch_time_ids[1])]=1
+        #lunch_times[7]=1
+        
+        
+        
+    
+    non_classrooms=[toilets_loc_1, toilets_loc_2, canteen_loc, staffroom_loc]
+    
+    floor_width=no_classrooms_per_corridor*classroom_size+(no_classrooms_per_corridor-1)
+    
+    initial_rq_inputs=[rq_mean, rq_sd]
+
+    initial_status_inputs=[initial_status_mean, initial_status_sd]
+        
+    student_teacher_pars=[teacher_standards_mean, teacher_standards_sd, student_standards_mean, student_standards_sd]
+
+    #######################################################################################
+    
+    ##generate the input data based on the actual data
+    
+    sel_rows=selected_students
+
     emp_networks=0
 
-    print("emp_networks")
+    agent_emp_inputs=0
 
-    print(emp_networks)
+    if use_emp_data==1:
+        
+        agent_emp_inputs=all_agent_emp_inputs.iloc[sel_rows, ]
+
+        sel_row_cols=selected_students-1
+
+        emp_networks=full_emp_network.iloc[sel_row_cols, sel_row_cols]
+        
+        print("Sel emp network")
+
+        print(emp_network)
     
+    
+    
+    
+    
+    
+    #######################################################################################
+
     ##Part xxx: initialise the locations
 
     grid_size=0
@@ -133,7 +203,7 @@ def Run_The_Model_Once(all_calibrated_inputs, all_inputs_set_through_data, all_t
 
         grid_width=2*floor_width+stair_case_width ##width of the grid
         
-        grid_length=floor_width ##length of the grid
+        grid_length=floor_length ##length of the grid
 
         no_locations=grid_width*grid_length ##one location for each grid point
 
@@ -141,11 +211,19 @@ def Run_The_Model_Once(all_calibrated_inputs, all_inputs_set_through_data, all_t
     
 #        if input.update_geography()=="1":
     
+    sel_location=0
     
+    for x_coord in np.arange(grid_width):
+        
+        for y_coord in np.arange(grid_length):
+        
+            all_locations.append(Location(sel_location, [x_coord, y_coord], no_time_steps))
     
-    for sel_location in np.arange(no_locations): ##and then initialise them
+            sel_location=sel_location+1
     
-        all_locations.append(Location(sel_location, floor_width, floor_length, no_time_steps))
+#    for sel_location in np.arange(no_locations): ##and then initialise them
+    
+ #       all_locations.append(Location(sel_location, floor_width*2+stair_case_width, floor_length, no_time_steps))
  
     ##commented code to check that it worked
  
@@ -190,7 +268,7 @@ def Run_The_Model_Once(all_calibrated_inputs, all_inputs_set_through_data, all_t
 
         corridors_open=0
         
-        G=Update_Location_Graph(all_locations,corridors_open,floor_width,stair_case_width,corridor_width)
+        G=Update_Location_Graph(all_locations, corridors_open, floor_width, stair_case_width, corridor_width, classroom_size, no_classrooms_per_corridor, non_classrooms, floor_length, display_some_outputs)
                 
         corridors_open=1
                 
@@ -226,6 +304,8 @@ def Run_The_Model_Once(all_calibrated_inputs, all_inputs_set_through_data, all_t
     #print(initial_agent_type_ordered)
 
     initial_agent_types=initial_agent_type_ordered#np.random.permutation(initial_agent_type_ordered)
+    
+    sel_canteen_teacher=np.random.permutation(np.arange(no_teachers))[0]
 
     #print("initial_agent_type")
 
@@ -237,27 +317,17 @@ def Run_The_Model_Once(all_calibrated_inputs, all_inputs_set_through_data, all_t
     
     age_category=np.zeros(no_agents)
     
-    if use_emp_networks==1:
+    no_in_each_age_tmp=int((no_agents-no_teachers)/2)
     
-        no_in_each_age=[171, 205]
-        
-    else:
-        
-        no_in_each_age_tmp=int((no_agents-no_teachers)/2)
-        
-        no_in_each_age=np.zeros(2).astype(int)
-        
-        no_in_each_age[0]=int(no_in_each_age_tmp)
-        
-        no_in_each_age[1]=int(no_in_each_age_tmp)
+    no_in_each_age=np.zeros(2).astype(int)
+    
+    no_in_each_age[0]=int(no_in_each_age_tmp)
+    
+    no_in_each_age[1]=int(no_in_each_age_tmp)
         
     age_category[no_teachers:(no_in_each_age[0]+no_teachers)]=1
     
     age_category[(no_in_each_age[0]+no_teachers+1):no_agents]=2
-    
-    
-        
-        
     
     #########
     
@@ -267,15 +337,15 @@ def Run_The_Model_Once(all_calibrated_inputs, all_inputs_set_through_data, all_t
 
     for sel_agent in np.arange(no_agents):
 
-        all_agents.append(Agent(sel_agent, no_time_steps, age_category))
+        all_agents.append(Agent(sel_agent, no_time_steps, age_category, initial_status_inputs, agent_emp_inputs, initial_stress_scale, no_teachers, use_emp_data))
 
     for sel_agent in np.arange(no_agents):
 
         all_agents[sel_agent].Record_All_Location_Types(all_locations) ##which are the classrooms
 
-        all_agents[sel_agent].Initialise_Agent_Type(initial_agent_types) ##what type are they
+        all_agents[sel_agent].Initialise_Agent_Type(initial_agent_types, sel_canteen_teacher) ##what type are they
         
-        all_agents[sel_agent].Initialise_Agent_Class(no_classes,class_prob_dist) ##what class are they?
+        all_agents[sel_agent].Initialise_Agent_Class(student_teacher_pars) ##what class are they?
 
     ##permute all the classrooms so that we can assign them to teachers
 
@@ -293,15 +363,15 @@ def Run_The_Model_Once(all_calibrated_inputs, all_inputs_set_through_data, all_t
 
     for sel_agent in np.arange(no_agents):
 
-        all_agents[sel_agent].Initialise_RQ(all_agents, emp_networks, initial_agent_types, no_teachers, use_emp_networks) ##initialise the social network
+        all_agents[sel_agent].Initialise_RQ(all_agents, emp_networks, initial_agent_types, no_teachers, initial_rq_inputs) ##initialise the social network
         
     S2_agent_ids=np.where(age_category==1)[0]
     
     S4_agent_ids=np.where(age_category==2)[0]
     
-    print("S4_agents")
+ #   print("S4_agents")
     
-    print(S4_agent_ids)
+  #  print(S4_agent_ids)
         
     S2_agents=[]
         
@@ -319,9 +389,9 @@ def Run_The_Model_Once(all_calibrated_inputs, all_inputs_set_through_data, all_t
     
     assigned_groups=Assign_Groups(S4_agents, int(no_groups/2))
 
-    print("assigned_groups")
+#    print("assigned_groups")
 
-    print(assigned_groups)
+ #   print(assigned_groups)
     
     for i in S4_agent_ids:
         
@@ -333,7 +403,7 @@ def Run_The_Model_Once(all_calibrated_inputs, all_inputs_set_through_data, all_t
     
   #  print(all_agents[250].movement_group)
 
-    Set_New_Group_Goals(no_groups, canteen_prob, 0, all_agents, no_teachers, no_in_each_age)
+    Set_New_Group_Goals(no_groups, canteen_prob, 0, all_agents, no_teachers, no_in_each_age, all_locations)
 
     for sel_agent in np.arange(no_agents):
 
@@ -366,7 +436,7 @@ def Run_The_Model_Once(all_calibrated_inputs, all_inputs_set_through_data, all_t
 
         ##movement functions
 
-        all_agents[sel_agent].Set_New_Goal_Class(prob_teacher_moving, canteen_prob, 0, prob_follow_group, assigned_teacher_classrooms) ##where is the new goal?
+        all_agents[sel_agent].Set_New_Goal_Class(prob_teacher_moving, canteen_prob, 0, prob_follow_group, assigned_teacher_classrooms, all_locations) ##where is the new goal?
 
         all_agents[sel_agent].Ideal_Goal_Length(all_locations,G) ##how long should it take?
 
@@ -412,7 +482,7 @@ def Run_The_Model_Once(all_calibrated_inputs, all_inputs_set_through_data, all_t
             
                 all_students=np.random.permutation(np.arange(no_teachers,no_agents))
                 
-                sel_stressed_students=all_students[0:(int(no_initially_stressed_students)+1)]
+                sel_stressed_students=all_students[0:(int(no_initially_stressed_students))]
                 
 #                print("sel_stressed_students")
                 
@@ -426,7 +496,9 @@ def Run_The_Model_Once(all_calibrated_inputs, all_inputs_set_through_data, all_t
         
         current_lunch_time=lunch_times[sel_moving_time] ##is it currently lunch time?
         
-        print("%age done = ",np.round(time/no_time_steps*100),"%", end="\r")
+        if display_some_outputs==1:
+        
+            print("%age done = ",np.round(time/no_time_steps*100),"%", end="\r")
 
         ################
 
@@ -440,13 +512,15 @@ def Run_The_Model_Once(all_calibrated_inputs, all_inputs_set_through_data, all_t
 
             agent_type=all_agents[sel_agent].agent_type ##agent type
             
-            if agent_type==1:
+            if agent_type==0:
             
                 r=np.random.random()
                 
                 if r<toilet_prob: ##...and by chance they don't move
                     
-                    all_agents[sel_agent].Set_New_Goal_Toilet()
+                    #print("Toilet!")
+                    
+                    all_agents[sel_agent].Set_New_Goal_Toilet(all_locations)
 
         ##initially don't move the agent for the first ten time steps, but after that move them every 20
         
@@ -470,11 +544,11 @@ def Run_The_Model_Once(all_calibrated_inputs, all_inputs_set_through_data, all_t
             
             assigned_teacher_classrooms=np.random.permutation(poss_classrooms)
 
-            Set_New_Group_Goals(no_groups, canteen_prob, current_lunch_time, all_agents, no_teachers, no_in_each_age)
+            Set_New_Group_Goals(no_groups, canteen_prob, current_lunch_time, all_agents, no_teachers, no_in_each_age, all_locations)
 
             for sel_agent in np.arange(no_agents):
 
-                all_agents[sel_agent].Set_New_Goal_Class(prob_teacher_moving, canteen_prob, current_lunch_time, prob_follow_group, assigned_teacher_classrooms)
+                all_agents[sel_agent].Set_New_Goal_Class(prob_teacher_moving, canteen_prob, current_lunch_time, prob_follow_group, assigned_teacher_classrooms, all_locations)
 
                 all_agents[sel_agent].Ideal_Goal_Length(all_locations,G)
 
@@ -504,9 +578,9 @@ def Run_The_Model_Once(all_calibrated_inputs, all_inputs_set_through_data, all_t
 
         for sel_agent in np.arange(no_agents):
 
-            all_agents[sel_agent].Decide_Negative_Interaction(all_agents,all_locations,status_threshold,stress_bully_scale)
+            all_agents[sel_agent].Decide_Negative_Interaction(all_agents, all_locations, status_threshold, stress_bully_scale)
 
-            all_agents[sel_agent].Decide_Negative_Class_Interaction(all_agents,all_locations)
+            all_agents[sel_agent].Decide_Negative_Class_Interaction(all_agents, all_locations, standards_interaction_scale)
 
         ##################
 
@@ -524,7 +598,7 @@ def Run_The_Model_Once(all_calibrated_inputs, all_inputs_set_through_data, all_t
 
             for sel_agent in np.arange(no_agents):
 
-                all_agents[sel_agent].Update_Stress_Due_To_Interactions(all_locations,all_agents,increase_in_stress_due_to_neg_int,decrease_in_stress_due_to_pos_int)
+                all_agents[sel_agent].Update_Stress_Due_To_Interactions(all_locations, all_agents, increase_in_stress_due_to_neg_int, decrease_in_stress_due_to_pos_int, reduction_due_to_teacher_presence)
 
                 all_agents[sel_agent].Update_Status(status_increase,status_decrease)
 
@@ -555,7 +629,7 @@ def Run_The_Model_Once(all_calibrated_inputs, all_inputs_set_through_data, all_t
         
             for sel_agent in np.arange(no_agents):
 
-                all_agents[sel_agent].Update_Stress_Due_To_Class_Interactions(stress_through_class_interaction,decrease_in_stress_due_to_pos_int)
+                all_agents[sel_agent].Update_Stress_Due_To_Class_Interactions(stress_through_class_interaction, decrease_in_stress_due_to_pos_int)
             
         for sel_agent in np.arange(no_agents):
             
