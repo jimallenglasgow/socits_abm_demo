@@ -441,7 +441,7 @@ class Agent():
 
             self.time_stress=np.zeros([no_time_steps]) ##and initialise a vector of stress for each time step
 
-            ind_time_stress=mean_time_stress#np.random.normal(loc=mean_time_stress)#*0.05 ##generate a constant random number for how stressful stressful times are for this agent
+            ind_time_stress=np.random.normal(loc=mean_time_stress)#*0.05 ##generate a constant random number for how stressful stressful times are for this agent
             
             if ind_time_stress<0.01:
             

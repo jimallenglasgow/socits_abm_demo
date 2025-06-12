@@ -66,9 +66,9 @@ app_ui = ui.page_sidebar(
                 "Initial settings",
 
                 ui.input_slider("no_time_steps", "No. time steps", 10, 1000, 100, step = 1),
-                ui.input_slider("no_students", "No. students", 10, 1000, 300, step = 1),
+                ui.input_slider("no_students", "No. students", 10, 1000, 150, step = 1),
 
-                ui.input_slider("stress_decay", "Stress decay", 0, 1, 0.5),
+                ui.input_slider("stress_decay", "Stress decay", 0, 1, 0.1),
 
                 
 
@@ -79,6 +79,10 @@ app_ui = ui.page_sidebar(
                 "Background features",
                 
                 ##background features
+                
+                ui.input_slider("mean_time_stress", "Mean time stress", -1, 5, 1),
+                ui.input_slider("mean_room_stress", "Mean room stress", -1, 5, 1),
+
     
                 
             ),
@@ -87,6 +91,13 @@ app_ui = ui.page_sidebar(
                 "Stress triggers",
                 
                 ##triggers
+                
+                ui.input_slider("crowded_threshold", "Crowded threshold", 0, 10, 2, step = 1),
+                
+                ui.input_slider("teacher_standards_mean", "Teacher standards mean", 0, 5, 3),
+
+                ui.input_slider("student_standards_mean", "Student standards mean", 0, 5, 1),
+
 
                 
             ),
@@ -96,7 +107,9 @@ app_ui = ui.page_sidebar(
                 
                 ##consequences
 
-
+                ui.input_slider("crowded_stress", "Crowded stress", 0, 10, 1.5),
+                
+                ui.input_slider("stress_through_class_interaction", "Stress through teacher int.", 0, 10, 1),
                 
             ),
               
@@ -104,6 +117,8 @@ app_ui = ui.page_sidebar(
             ui.accordion_panel(
                 "Student travel pars",
                 
+                ui.input_slider("prob_follow_group", "Prob follow group", 0, 1, 0.5),
+
 
                 
             ),
@@ -152,32 +167,32 @@ def server(input, output, session):
     
     ##and the set inputs
 
-    inc_science_perspective=0
+    inc_science_perspective=1
     inc_walking_perspective=1
     inc_yais_perspective=1
     inc_teacher_perspective=1
-    stress_decay=0.5
+    stress_decay=0.1
     status_threshold=5
-    increase_in_stress_due_to_neg_int=25
-    decrease_in_stress_due_to_pos_int=25
+    increase_in_stress_due_to_neg_int=2
+    decrease_in_stress_due_to_pos_int=0.1
     rq_decrease_through_bullying=5e-04
     rq_increase_through_support=5e-04
-    crowded_threshold=5e-04
-    crowded_stress=5e-04
+    crowded_threshold=2
+    crowded_stress=1.5
     journey_stress=5e-04
     stress_bully_scale=1
-    stress_through_class_interaction=25
+    stress_through_class_interaction=1
     prob_teacher_moving=0.5
     status_increase=5e-04
     status_decrease=5e-04
-    mean_time_stress=-0.995
-    mean_room_stress=-0.995
+    mean_time_stress=1
+    mean_room_stress=1
     prob_follow_group=0.5
     teacher_standards_mean=3.005
     teacher_standards_sd=0.5
-    student_standards_mean=2.5
+    student_standards_mean=1
     student_standards_sd=0.5
-    standards_interaction_scale=1.0005
+    standards_interaction_scale=1
     initial_status_mean=2.5
     initial_status_sd=5
     reduction_due_to_teacher_presence=0.5
@@ -193,7 +208,7 @@ def server(input, output, session):
     toilets_loc_2=15
     canteen_loc=13
     staffroom_loc=6
-    no_time_steps=100
+    no_time_steps=60
     no_students=300
     no_bullies=0
     no_initially_stressed_students=0
@@ -203,6 +218,8 @@ def server(input, output, session):
     toilet_prob=0.002
     canteen_prob=0.5
 
+
+
     non_classrooms=[toilets_loc_1, toilets_loc_2, canteen_loc, staffroom_loc]
     
     floor_width=no_classrooms_per_corridor*classroom_size+(no_classrooms_per_corridor-1)
@@ -210,9 +227,17 @@ def server(input, output, session):
     @reactive.calc()
     def Run_The_Shiny_Model():
         
-        stress_decay=input.stress_decay()
         no_time_steps=input.no_time_steps()
         no_students=input.no_students()
+        stress_decay=input.stress_decay()
+        crowded_threshold=input.crowded_threshold()
+        crowded_stress=input.crowded_stress()
+        mean_time_stress=input.mean_time_stress()
+        mean_room_stress=input.mean_room_stress()
+        prob_follow_group=input.prob_follow_group()
+        teacher_standards_mean=input.teacher_standards_mean()
+        student_standards_mean=input.student_standards_mean()
+        stress_through_class_interaction=input.stress_through_class_interaction()
         
         selected_students=np.arange(no_students)
 

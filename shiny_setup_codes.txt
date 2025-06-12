@@ -1,3 +1,5 @@
+https://www.appsilon.com/post/shiny-for-python-deploy-github-pages
+
 cd GitHub/socits_abm_demo
 
 shinylive export socits_shiny docs

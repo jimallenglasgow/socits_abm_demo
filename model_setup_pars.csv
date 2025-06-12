@@ -1,30 +1,30 @@
 ﻿Parameter_name,Set,Default,emp_values,Type,Min,Max,Text,shiny_input
-inc_science_perspective,0,0,,int,0,1,x,N
+inc_science_perspective,1,0,,int,0,1,x,N
 inc_walking_perspective,1,1,,int,0,1,x,N
 inc_yais_perspective,1,1,,int,0,1,x,N
 inc_teacher_perspective,1,1,,int,0,1,x,N
-stress_decay,0.5,0.5,,float,0,1,Stress decay,Y
+stress_decay,0.1,0.5,,float,0,1,Stress decay,Y
 status_threshold,5,5,,float,0,10,Status threshold,N
-increase_in_stress_due_to_neg_int,25,25,,float,0,50,Increase in stress due to neg int,N
-decrease_in_stress_due_to_pos_int,25,25,,float,0,50,Decrease in stress due to neg int,N
+increase_in_stress_due_to_neg_int,2,25,,float,0,50,Increase in stress due to neg int,N
+decrease_in_stress_due_to_pos_int,0.1,25,,float,0,50,Decrease in stress due to neg int,N
 rq_decrease_through_bullying,0.0005,0.0005,,float,0,0.001,RQ decrease_through_bullying,N
 rq_increase_through_support,0.0005,0.0005,,float,0,0.001,rq_increase_through_support,N
-crowded_threshold,0.0005,0.0005,,int,0,0.001,Crowded threshold,N
-crowded_stress,0.0005,0.0005,,float,0,0.001,Crowded stress,N
+crowded_threshold,2,0.0005,,int,0,10,Crowded threshold,Y
+crowded_stress,1.5,0.0005,,float,0,25,Crowded stress,Y
 journey_stress,0.0005,0.0005,,float,0,0.001,journey_stress,N
 stress_bully_scale,1,1,,float,0,10,Stress bully scale,N
-stress_through_class_interaction,25,25,,float,0,50,Stress through norms interaction,N
+stress_through_class_interaction,1,25,,float,0,50,Stress through norms interaction,N
 prob_teacher_moving,0.5,0.5,,float,0,1,Prob teacher moving,N
 status_increase,0.0005,0.0005,,float,0,0.001,status_increase,N
 status_decrease,0.0005,0.0005,,float,0,0.001,status_decrease,N
-mean_time_stress,-0.995,-0.995,,float,-1,-0.99,Mean time stress,N
-mean_room_stress,-0.995,-0.995,,float,-1,-0.99,Mean room stress,N
-prob_follow_group,0.5,0.5,,float,0,1,Prob follow group,N
-teacher_standards_mean,3.005,3.005,,float,3,3.01,Teacher standards mean,N
+mean_time_stress,1,-0.995,,float,-1,5,Mean time stress,Y
+mean_room_stress,1,-0.995,,float,-1,5,Mean room stress,Y
+prob_follow_group,0.5,0.5,,float,0,1,Prob follow group,Y
+teacher_standards_mean,3.005,3.005,,float,0,5,Teacher standards mean,Y
 teacher_standards_sd,0.5,0.5,,float,0,1,Teacher standards sd,N
-student_standards_mean,2.5,2.5,,float,0,5,Student standards mean,N
+student_standards_mean,1,2.5,,float,0,5,Student standards mean,Y
 student_standards_sd,0.5,0.5,,float,0,1,Student standards sd,N
-standards_interaction_scale,1.0005,1.0005,,float,1,1.001,Standards interaction scale,N
+standards_interaction_scale,1,1.0005,,float,1,1.001,Standards interaction scale,N
 initial_status_mean,2.5,2.5,,float,0,5,Initial status mean,N
 initial_status_sd,5,5,,float,0,10,Initial status sd,N
 reduction_due_to_teacher_presence,0.5,0.5,,float,0,1,Reduction due to teacher presence,N
@@ -40,7 +40,7 @@ toilets_loc_1,1,1,,int,1,1,toilets_loc_1,N
 toilets_loc_2,15,15,,int,1,1,toilets_loc_2,N
 canteen_loc,13,13,,int,1,1,canteen_loc,N
 staffroom_loc,6,6,,int,1,1,staffroom_loc,N
-no_time_steps,100,500,,int,10,1000,No. time steps,Y
+no_time_steps,60,500,,int,10,1000,No. time steps,Y
 no_students,300,450,,int,10,1000,No. students,Y
 no_bullies,0,0,,int,10,10000,no_bullies,N
 no_initially_stressed_students,0,0,,int,10,10000,No. initially stressed students,N
