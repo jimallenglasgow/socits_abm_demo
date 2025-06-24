@@ -33,7 +33,7 @@ class Agent():
 
         self.agent_id=agent_id
         
-        self.agent_info=np.zeros([no_time_steps,9])
+        self.agent_info=np.zeros([no_time_steps,10])
         
         ####
         
@@ -1447,7 +1447,7 @@ class Agent():
     
     ##this function records all of the necessary information in this time step for this agent
  
-    def Record_Agent_Info(self,time):
+    def Record_Agent_Info(self, time, all_locations):
 
         self.agent_info[time,[0,1]]=self.current_position
 
@@ -1464,6 +1464,8 @@ class Agent():
         self.agent_info[time,7]=self.neg_deg
 
         self.agent_info[time,8]=self.current_location
+        
+        self.agent_info[time,9]=all_locations[self.current_location].room_id
         
         
 
